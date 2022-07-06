@@ -1,0 +1,274 @@
+\documentclass[12pt,a4paper]{book}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{amsmath,mathtools,breqn,amsfonts, amsthm, mathrsfs, amssymb}
+\usepackage[margin=3cm,letterpaper]{geometry} % decreases margins
+\usepackage{comment}
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{caption}
+
+\definecolor{green}{RGB}{60,179,113}
+\definecolor{violet}{RGB}{153,50,204}
+\definecolor{blue}{RGB}{65,105,225}
+\definecolor{gray}{RGB}{128,128,128}
+
+% set up the colors for different kind of references
+\hypersetup{
+	colorlinks = true,
+	linkcolor  = violet,
+	citecolor  = green 
+}
+
+\lstset{
+	language=C,
+	aboveskip=3mm,
+	belowskip=3mm,
+	xleftmargin=5mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{green},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4
+}
+
+\newcommand{\st}{\hspace{2px}.\hspace{2px}}
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}
+
+\raggedbottom
+
+\begin{document}
+	%\frontmatter
+	
+	\pagenumbering{gobble}
+	\begin{titlepage}
+		\begin{center}
+			\vspace*{1cm}
+			
+			\Huge
+			\textbf{\Huge Detecting Microarchitectural Attacks}
+			
+			\vspace{0.3cm}
+			\LARGE \textsc{Draft}
+			
+			\vspace{1.5cm}
+			
+			\large Author: \textit{Magdalena M. Solitro}
+			
+			\vfill
+		\end{center}
+	\end{titlepage}
+	
+	\tableofcontents
+	
+	\mainmatter
+	
+	\chapter{Introduction}
+	
+	\chapter{Static Analysis}
+	Static analysis is a set of automated techniques used to inspect the code to find possible flaws or vulnerabilities, without executing the program. The need of such tools is dictated by many reasons:
+	\begin{itemize}
+		\item \textbf{speed:} the possibility of using fast methods to analyse code implies being able to perform controls much more frequently; 
+		\item \textbf{automation:} being able to check the properties of a program automatically relieve humans from a cumbersome and error-prone process;
+		\item \textbf{efficacy:} static analysis can detect flaws that appear only very rarely during execution, and thus would be hard to spot through simple testing.
+	\end{itemize}
+	However, static analysis is not infallible, which means that it does not always provide the correct results. To be more precise, the effectiveness of static analysis has to confront some intrinsic limits of computation, namely the undecidability of the \textit{Halting problem} and \textit{Rice's theorem}. 
+	\theoremstyle{theorem}
+	\newtheorem{thm}{Theorem}
+	\begin{thm}[Halting problem] Let $\mathcal{L}$ be the set of all programs that can be written in a certain language, and let $p$ be one of such programs. 
+	
+	The halting problem consists in finding an algorithm \texttt{halt} such that,  
+	\[
+		\forall\hspace{2px}p\in\mathcal{L}\st\texttt{halt(p)} = true \Longleftrightarrow p\text{ terminates}
+	\]
+	The halting problem is not computable: an algorithm such as \texttt{halt} does not exist, as proved simultaneously by Alonso Church \cite{Church1936} and Alan Turing \cite{Turing1937} in 1936.
+	\end{thm}
+	This theorem provide an example of something that a program analysis tool cannot detect: no algorithm can decide whether a program, written in any language, will terminate or not.
+	
+	There is another theoretical result, that provides an even stronger statement on what we can prove about the properties of a program:
+	\begin{thm}[Rice's Theorem] Let $\mathcal{L}$ be a Turing-complete language, and let $\mathcal{P}$ be a nontrivial semantic property of programs of $\mathcal{L}$. There exists no algorithm \texttt{SatP} such that,
+	\[
+		\forall\hspace{2px}p\in\mathcal{L}\st\texttt{SatP(p)} = true \Longleftrightarrow p\text{ satisfies the semantic property } \mathcal{P}. 	
+	\]
+	\end{thm}
+	The notion of "nontrivial" mentioned in the theorem identifies those properties that either concern \textit{every} program in the language, or \textit{none}, therefore
+	\[
+		\mathcal{P}\text{ is trivial} \Longleftrightarrow \mathcal{P} = \mathcal{L} \vee \mathcal{P} = \emptyset
+	\]
+	Clearly, we are not interested in trivial properties, because there is really nothing to prove about them in a program!
+	Intuitively, what Rice's theorem states is that, for \textit{any interesting property}, we cannot have an algorithm that is able to decide whether a certain program has that property or not. This sounds discouraging: the theorems mentioned above seem to destroy any hope of being able to prove anything interesting about programs. Luckily, this is not quite the case: while it is impossible to have an algorithm that correctly detects a certain property in \textit{all} cases, it is perfectly feasible to detect it \textit{sometimes}, and this is precisely what static analysis does. This also means that it's impossible to construct a "perfect" static analysis tool, namely one that is always able to detect any (extensional) property of a program: this justifies the existance of a research field dedicated to static analysis.
+	
+	What we just said implies that the results provided by the algorithm will occasionally produce unreliable results, such as false positives and false negatives: the former refers to the detection of bugs that the program doesn't actually have, while the second one concern the failure of finding bugs that the code indeed has. False negatives are clearly a much bigger issue, because they lead to a false sense of security. For this reason, a good tool for static analysis should never fail to detect bugs, while it is allowed to output a false positive \cite{Gomes2009}.
+	
+	Another way around the limitation of Rice's Theorem is to give up complete automation, designing tools that require human intervention to compute the final result, accepting the risk of introducing mistakes in the comutation of the final result.
+	
+	The intrinsic inaccuracy of static analysis tools can be formalised by means of two notions: \textit{soundness} and \textit{completeness}.
+	
+	\begin{defn}[Soundness]
+		Let \texttt{analyse} be a program that tests whether another program has a certain property $\mathcal{P}$ and let $\mathcal{L}$ be a programming language. We say that the program \texttt{analyse} is \textbf{sound} with respect to $\mathcal{P}$ if the following condition is satisfied:
+		\[
+			\forall p \in \mathcal{L} \st \text{\texttt{analyse}}(p) = \text{\textbf{true}} \Longrightarrow p \text{ satisfies } \mathcal{P}
+		\]
+	\end{defn}
+	A trivial \texttt{analysis} program that is guaranteed to be sound is the one that always returns false: by invalidating the premise, it makes the overall implication to be true, even though such analyser would clearly be of no utility.
+	
+	For the definition of completeness, we use the same notation of the previous definition.
+	\begin{defn}[Completeness]
+		We say that a program \texttt{analyse} is \textit{complete} with respect to $\mathcal{P}$ if the following condition is satisfied:
+		\[
+			\forall p \in \mathcal{L} \st p \text{ satisfies } \mathcal{P} \Longrightarrow \text{\texttt{analyse}}(p) = \text{\textbf{true}} 
+		\]
+	\end{defn}
+	Also in this case, we can provide a trivial \texttt{analysis} program that is guaranteed to be complete, namely the one that always returns true. In fact, if the consequence is true, the overall implication will always evaluate to true, independently from the truth value of the premise.
+	\chapter{Spectre}
+	\textit{Spectre} identifies a family of security vulnerabilities that exploit the microarchitectural effects of speculative execution to read and write protected memory from a program's address space. Spectre is classified as a \textit{cache side-channel attack}, as it's based on adversary's ability to monitor cache accesses made by the victim and measuring the time difference between a cache access and a memory access.
+	
+	In this section I'm going to provide all the background notions that are needed to comprehend the mechanism of a Spectre attacks. Furthermore, I present a complete overview of all the variants of the attacks that are currently known, describing what microarchitectural data structure they exploit and how the attack is carried out.
+	\section{Background}
+	This section deals with all the background concepts that lie at the basis of Spectre, in particular speculative execution and cache side channels. As stated in the pioneering work by Kocher et al. \cite{Kocher2019}, "Spectre attacks violate memory isolation boundaries by combining speculative execution with data exfiltration via microarchitectural covert channels."
+	\subsection{Out-of-Order execution and micro-operations}\label{ooo-exec}
+	When executing a program, the processor splits single assembly instructions in a series of lower-level operations called \textit{micro-operations} (also abbreviated as micro-ops or $\mu$-ops): this has the advantage of allowing the CPU to execute different part of the instructions in different moments, based on the current availability of the data \cite{Fog2021}. For example, consider the following piece of code, written in Intel syntax:
+	\begin{lstlisting}
+add eax, ebx
+add [reg], eax
+	\end{lstlisting}
+	The instruction on line 1 adds the content of two cache registers, \texttt{eax} and \texttt{ebx}. This means that the data will be immediately available to the CPU and thus this instruction doesn't need to be split in more than one $\mu$-op. The instruction on line 2, instead, is much different: it requires to (i) retrieve \texttt{[reg]}, namely the data located at the memory address stored in \texttt{reg}, then (ii) add it to the content of \texttt{eax}, and finally (iii) to write the result back to \texttt{[reg]}. Therefore, up to two memory accesses are needed to complete the instruction, but since these accesses are very time-consuming, the CPU splits the instructions into three $\mu$-ops (corresponding to the three step described), so that it can execute other tasks while it waits for the data to be accessible, avoiding to waste hundreds of clock cycles and thus speeding up the computation. This is precisely what is referred to as \textit{out-of-order execution}. This paradigm, however, comes with a challenge: when executing $\mu$-ops out of order, the CPU must establish whether there are dependencies between different instructions that can obstacle the completion of certain tasks.	For example, let's consider again the two assembly instructions written above: note that the addition on line 2 involves \texttt{eax}, which is modified by the previous addition. This means that the micro-operation (ii) can't be executed before the result of the previous addition is not stored in \texttt{eax}. To implement out-of-order execution successfully, the CPU uses a mechanism called \textit{memory disambiguation}, accurately described in \ref{sec:spectre-stl}, to detect and resolve this kind of dependencies. 
+	
+	\subsection{Speculative execution}\label{sec:speculative-exec}
+	Speculative execution is an optimization technique where the CPU uses statistical information about the program execution to make guesses about the outcome of conditional branches or a data dependencies, and consequently decides to load data and execute certain micro-operations in advance. If the prediction is correct, the processor can benefit of the intermediate results and the data that loaded to speed up the execution of the following instructions. Otherwise, the CPU performs a rollback to the last correct state, discarding the intermediate results computed speculatively. It's imporatant to highlight that the effects of speculative execution are visible only at microarchitectural level until they are committed to the architectural state: the user doesn't have the perception that the execution flow is not strictly linear, and never sees the effect of incorrect predictions in the program's output. However, when a misprediction happen, the intermediate results and the data loaded preventively in cache remain there. This asymmetry between the microarchitectural state and what the user sees from the execution of the program gives space to the a type of attack vector known as \textit{cache side channel}, which is discussed in \ref{sec:cache-sc}.
+		
+	\subsection{Cache side channels}\label{sec:cache-sc}
+	A cache side channel \cite{Zhang2017} is a type of attack vector that allows to infer secret variables by monitoring the state of the cache during the program execution. So far, three different kinds of cache side-channels have been identifies, each of which monitors different behaviours of the cache: time-driven \cite{Page2002}, trace-driven \cite{Page2002}, and access-driven.
+	\paragraph{Time-driven side channels} In this case, the adversary keeps track of the execution time of the program and use that information to infer what data is loaded into the cache. 
+	A typical example of timing attack targets the modular exponentiation function used in many public key cryptographic algorithm, included RSA. Modular exponentiation consists in raising a large number (i.e. the plaintext or the ciphertext) to a large exponent (i.e. the public key or the secret key respectively), which is extremely time consuming, since it requires to perform repeated multiplications using large integers. The subprocedure \texttt{square-and-multiply}, allows to do this computation efficiently:
+	\begin{lstlisting}
+square-and-multiply(M, e, N){
+	R = 1
+	for (i=0 to n-1){
+		R = R^2 mod N
+		if(e[i] == 1){ R = R * M mod N }
+	}	
+	return R
+}
+	\end{lstlisting}
+	where \texttt{M} is the message we want to encrypt (or decrypt), \texttt{e} is the exponent, \texttt{n} is the its length, \texttt{N} is the modulo, \texttt{R} is the result. As one can see, for each bit of the secret or public key \texttt{e}, the message is squared. If the current bit of the exponent is 1, then the result is also multiplied by \texttt{M}. 
+ 	\paragraph{Trace-driven side channels} In this attack, the adversary monitors the amount of power consumed during the execution. The power trace is a rich source of information, as it can reveal not only when certain operations are performed, but also what data is being used at each stage of the computation. The attacks carried out through this vector are also known as \textit{power analysis} attacks and they proved to be very effective: for example, numerous attacks of this kind have been successfully conducted on AES, the standard algorithm for simmetric encryption, to exfiltrate entire bytes of the symmetric key \cite{Buchanan2017} \cite{Mangard2003} \cite{Mangard2010} \cite{Oswald2004}. The attack is performed collecting a large number of power traces, on which the adversary performs different statistical analyses that can reveal the data dependency between the power consumption and the execution time. This attack style is known as \textit{Differential} Power Analysis (DPA), to distinguish it from \textit{Simple} Power Analysis (SPA), where the attacker needs only one single trace and tries to deduce information about the secret key from it.
+	\paragraph{Access-driven side channels} 
+	Access-driven attacks, like time-driven ones, leverage on time measurements to unveil the value of some secret information. However, they rely on a much finer kind of measurement: while time-driven attacks are based on the execution time of the whole program, access-driven ones exploit "the ability to
+	detect whether a cache line has been evicted, or not, as the primary
+	mechanism for mounting an attack" \cite{Neve2007}. From this point of view, this attack requires a much finer measurement capacity. A famous example of how to concretely exploit the timing information is \textsc{Flush$+$Reload} \cite{Yarom2014}, an attack that relies on sharing pages between the attacker and the victim processes. \textsc{Flush$+$Reload} can be summarised through the following steps: the adversary's goal is to verify whether the victim uses a secret piece of data $d$. To accomplish this, the adversary's process evicts the cache line containing $d$ and waits a certain amount of time, to give the victim the opportunity of using $d$, in case they need it. Then the attacker reloads the memory line and measures the time to load it: if the victim accessed $d$ during the latency time, the reload will be very quick, because $d$ was already brought back to the cache. Otherwise, $d$ is still in the main memory and the reloading time will be significantly longer, indicating that the victim did not access $d$ during the latency. Figure \ref{fig:flush-reload}, taken from the paper that first described the attack \cite{Yarom2014}, can help clarifying these concepts.
+	\begin{figure}[h!]
+		\centering
+		\includegraphics[scale=0.3]{../imgs/flush+reload}
+		\captionsetup{width=.8\linewidth}
+		\caption{\textsc{Flush+Reload} time measurement \cite{Yarom2014}. (A) and (B) represent the main cases described above. (C), (D), (E) are more peculiar cases.}
+		\label{fig:flush-reload}
+	\end{figure}
+	One of the assumptions that must hold to carry out such attacks successfully is that the adversary must share the cache space with the victim.
+	
+	\section{Spectre variants}\label{sec:spectre-var}
+	As mentioned at the beginning of this chapter, the term "Spectre" on itself does not identify a single attack, but a \textit{family} of attacks, all united by the same common denominator: they maliciously influence the speculative execution of a program to exfiltrate confidential information. Different version of Spectre can be carried out through the exploitation of different microarchitectural behaviours. The purpose of this section is to present the four main variants of Spectre, describing what vulnerability they take advantage of and in how they differ from each other.
+	\subsection{Spectre-PHT (Pattern History Table)}
+	Spectre-PHT \cite{Kocher2019}\cite{Canella2019}\cite{Evtyushkin2018}, also known as variant 1 or Bound Check Bypass, was one the first attack of the Spectre family to be discovered. As the name suggests, this version targets the Pattern History Table (PHT) to trigger a branch misprection.
+	\paragraph{Pattern History Table (PHT)} The Pattern History Table \cite{Fog2021} is a data structure used by the branch predictor to guess the outcome of a conditional branch before the value of the guard is fully determined. Intuitively, during the execution of a program, the CPU keeps track of the last $N$ outcomes of a conditional branch in the \textit{branch history register}. The outcomes are encoded as a bitstring of length $N$, where a 1 indicates an execution where the guard expression evaluated to true, while a 0 represents the opposite case. The content of the branch history buffer is used to point at a specific entry of the Pattern History Table. The PHT contains $2^N$ entries, i.e. as many entries as all the possible sequences of $N$ outcomes; each entry in
+	the contains a 2-bit saturating counter, namely a finite-state automaton that decides the probability of a certain outcome. The branch history register is used for choosing which of the four counters to use.
+	
+	\paragraph{The attack} By poisoning the PHT, the adversary can induce the branch predictor to make a wrong guess about the direction of the conditional branch and perform both reading and writing operations in memory parts they shouldn't have the right to access. To clarify this concept, I propose a couple of examples, taken from \cite{Canella2019}:
+	\begin{lstlisting}
+if(x < len(array1)) {
+	y = array2[array1[x] * 4096]
+}
+	\end{lstlisting}
+	Note that the index we use to access \texttt{array2} is multiplied by 4096. The reason is that the usual cache block size is 64 bytes, so by using indexes in the form \texttt{[k * 4096]} we avoid having two elements used in the program falling into the same cache block.
+	The conditional instruction allows reading a value from \texttt{array2} only if \texttt{x} represents a valid index. However, after repeatedly executing the conditional branch with a value of \texttt{x} that satisfies the guard, the branch predictor will forecast that the expression \texttt{x < len(array1)} evaluates to true and thus will execute the assignment on line 2 in advance. When the adversary supplies an invalid value for \texttt{x}, the CPU will performe an \textit{out-of-bounds memory access}, loading in the cache a value for \texttt{y} that shouldn't be accessed.
+	
+	The same effect can be exploited to perform a write operation on the array, as shown in the following piece of code:
+	\begin{lstlisting}
+if (x < len(array)) { 
+	array[x] = value; 
+}
+	\end{lstlisting}  
+	Just as the described above, the attacker can "train" the CPU to guess a certain outcome of the branching instruction and then exploits the misprection caused by the provision of an invalid value of \texttt{x} to write on a protected location.
+	\subsection{Spectre-BTB (Branch Target Buffer)}
+	Spectre-BTB \cite{Kocher2019} \cite{Canella2019}, also known as variant 2 or Branch Target Injection, affects the Branch Target Buffer to deflect the transient execution to a mispredicted branch target. This attack was discovered simultaneously to variant 1 and exploits a similar mechanism.
+	
+	\paragraph{Branch Target Buffer (BTB)} The Branch Target Buffer \cite{Perleberg1989} is a data structure located in the cache, that stores a set of guesses for the target addresses of all jumps, both conditional and unconditional. The first time a jump instruction is executed, the target address that is reached gets stored in the BTB, so no speculation is made for the first jump. When the jump is executed again, a pointer to the BTB indicates the target address of the previous execution, allowing the CPU to fetch the  predicted instruction into the pipeline, but the true target will not be calculated until the jump reaches the execution stage. Once the jump is actually performed,the address predicted with the BTB is compared with the actual address taken by the jump: if they don't match, the guess was wrong, so the results are rolled back and the previous target address is replaced by the current one in the BTB.
+	\paragraph{The attack} The logic that governs this variant is very akin to the one behind Spectre-PHT: both attacks target data structures that aim to anticipate the outcome of jump instructions, trying to influence the prediction about what is executed as a consequence of the jump.
+	
+	However, there is a significant difference between Spectre-PHT and Spectre-BTB: in the former, the execution flows along a restricted mispredicted path, i.e. the attacker can influence the branch predictor only in the choice of the branch to execute. The latter, instead, allows redirecting the control flow to an arbitrary destination, so that the execution can continue at a specific point chosen by the adversary. This location corresponds to a \textit{Spectre gadget}, namely "a code fragment whose speculative execution will transfer the victim’s sensitive information into a covert channel"\cite{Kocher2019}.
+	
+	\subsection{Spectre-RSB (Return Stack Buffer)}
+	Spectre-RSB \cite{Maisuradze2018} \cite{Koruyeh2018} \cite{Canella2019}, also known as ret2spec, is a variant that exploits a data structure called Return Stack Buffer.
+	
+	\paragraph{Return Stack Buffer (RSB)}The Return Stack Buffer is a microarchitectural buffer used to predict return address of a function: whenever a call instruction is reached during the execution, the prediction of the return address is pushed on top of a stack. When the execution reaches the \texttt{return} point, the top entry of the stack is used to speculate about the return address location quickly. Meanwhile, the actual return address is fetched, possibly from the main memory, therefore it will be available after only after hundreds of clock cycles. Once the real return address is loaded, it gets compared with the address that was fetched from the RSB: if they match, all the result computed until that point can be committed and the overall execution time gains in speed.
+	
+	\paragraph{The attack} To describe Spectre-RSB attacks, we also refer to another kind of stack: the \textit{program stack}, namely a data structure that stores information about the active subroutines of a computer program.
+	
+	There are various ways in which the adversary can poison the RSB, all described in detail in \cite{Koruyeh2018}. One way to carry out the attack is to exploit the stack overfill or underfill: the RSB has a very limited size, which can vary between 4 and 24 entries, thus it saturates quickly. When this happens, the stack gets updated in a cyclic manner, namely the latest return address is pushed on the stack, the $n$-th entry is discarded and the $(n-1)$-th takes its place. As the functions progressively reach the \texttt{return} instruction, the entries of both the program stack and the RSB get popped, but at some point we reach the function whose value has been overwritten, causing an underfill of the RSB.
+	
+	The primary attack strategy is to directly pollute the RSB: the adversary can overwrite the return address on the program stack, so that the top entry represents the return address of the previous function. In this way, the address found on the program stack and the on top of the RSB will certainly mismatch. 
+	
+	Another way is to leverage on the \textit{speculative} pollution of the RSB. When functions are called during a speculative execution and a misspeculation happens, their results are rolled back and they are removed from the stack. However, the guessed return addresses remain in the RSB, providing the opportunity to push an address that points outside the address space accessible by the program without raising exceptions.
+	
+	\subsection{Spectre-STL (Store To Load)}\label{sec:spectre-stl}
+	Spectre-STL \cite{Canella2019}, also known as variant 4 or Speculative Store Bypass, is a variant that exploits not only dependencies in the control flow, but also those in in the \textit{data flow}. More precisely, this version takes advantage of the memory disambiguation mechanism that is put in place by most moder processors.
+	
+	\paragraph{Memory disambiguation} Memory disambiguation\footnote{\url{https://en.wikipedia.org/wiki/Memory_disambiguation}} is a set of techniques used to execute memory access instructions out of order, without affecting the value of the final result. To justify the need of these techinques, I will present two examples, both taken from (Wikipedia):
+	
+	\begin{lstlisting}
+add $1, $2, $3      # R1 <= R2 + R3
+add $5, $1, $4      # R5 <= R1 + R4
+	\end{lstlisting}
+	
+	The code above shows two micro-operations that perform simple additions. The result of the second instruction depends on the result of the first one, since the value of register R1 is computed in line 1 and then R1 is used as operand for the addition in line 2. This is a case of \textit{static} dependence, because the sources and destinations of the operations are registers. The processor can easily spot this dependence and decide an order of execution where the first addition is performed before the second one, so that the result is consistent with a sequential execution.
+	
+	However, "complications arise when the dependence is not statically determinable". Consider the following code snippet:
+	
+	\begin{lstlisting}
+store $1, 2($2)      # Mem[R2+2] <= R1
+load  $3, 4($4)      # R3 <= Mem[R4+4]
+	\end{lstlisting}
+	In this case, the location of the operand is indirectly specified by means of a register, rather than directly defined in the instruction encoding itself. As clearly stated \href{https://en.wikipedia.org/wiki/Memory_disambiguation}{here}, "the microprocessor cannot statically determine, prior to execution, if the memory locations specified in these two instructions are different, or are the same location, because the locations depend on the values in R2 and R4". As a consequence, it is not possible to determine at compile time whether these two instructions can be executed in a different order or not: this is known as \textit{ambiguous} dependence. Detecting and resolving ambiguous dependencies require more sophisticated techniques than static dependency, and this is where the memory disambiguation mechanism comes into play.
+	
+	To further improve the performances, some processor support a technique called \textbf{memory dependence prediction}, which is analogous to branch prediction, that leaves room for a Spectre attack. This method aims at predicting the true dependencies between store and loads, in order to speculatively execute certain memory accesses out of order without affecting the final result of the computation. Similarly to the other variants, the guesses of the memory dependence predictor must be validated or discarded later in the pipeline, when the memory disambiguation system takes action and determines whether the loads and store where correctly executed.
+	\paragraph{The attack} Spectre-STL exploits the prediction mechanisms to read a value from a protected address. The core idea of the attack leverages on the saw called \textit{RAW hazard}: "RAW" stands for "Read-After-Write" and it indicates a data dependency where a load operation reads a value from a memory location that was subjected to a store operation in a previous instruction. A RAW-hazard takes place when the processor reads the address \textit{before} the previous store operation commits its value to the memory.
+	
+	The following example clarifies how to exploit a RAW-hazard to carry out a Spectre attack:
+	\begin{lstlisting}
+ptr = secret_pointer;		// initial value
+ptr = public_pointer;		// STORE
+if(is_public(ptr)){	
+	value = *ptr;			// LOAD
+}
+cache = array[value];		// look-up
+	\end{lstlisting}
+	On line 1, the value of the pointer gets initialised with the location of a secret value, while on line 2 it gets re-assigned to the location of a public value. The \texttt{if} branch checks whether the pointer corresponds to a public address, in which case it allows to read the value stored there. The attack succeeds if the adversary can induce the CPU to delay the commitment of the second store operation, executing the \texttt{if} branch with the initial value of \texttt{ptr}.
+	
+	Note that this variant does not involve manipulating the branch predictor in any way: throughout the attack, the \texttt{if} clause always evaluates to \texttt{true} (explain better).
+
+	\chapter{Verification tools to detect Spectre}
+	
+	\textit{Formal verification} consists in checking that a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the resistance against Spectre-like attacks (be more precise). 
+	\begin{itemize}
+		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
+	\end{itemize}
+	
+	\section{Jasmin}
+	Jasmin is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In fact, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
+	
+	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes the code easier to verify, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
+	
+	\bibliography{thesis_ref}{}
+	\bibliographystyle{acm}
+	
+\end{document}
