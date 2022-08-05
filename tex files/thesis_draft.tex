@@ -264,22 +264,38 @@ cache = array[value];		// look-up
 	
 	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the resistance against Spectre-like attacks (be more precise). 
 	
-	This work focuses on three different analysis tools:
+	This work focuses on three (four?) different analysis tools:
 	\begin{itemize}
 		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
+		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through \textit{taint analysis}
 		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution to prove a property called \textit{speculative noninterference}, which encodes security against speculative execution attacks;
 		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
 	\end{itemize}
+
+	Before diving into the description and comparison between these tools, 
+	
+	\section{Background notions}
+	\subsection{Taint analysis}
+	\subsection{Symbolic execution}
+	\subsection{Generative Adversarial Networks (GANs)}
 	
 	\section{Jasmin}
-	Jasmin is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
+	\textit{Jasmin} is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
 	
-	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes the code easier to verify, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
+	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes it easier to detect Spectre gadgets, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
 	
 	\section{Spectector}
 	
-	\section{FastSpec}
+	\section{oo7}
 	
+	\section{FastSpec}
+	\textit{FastSpec} \cite{Tol2021} is a recent tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods (such as...). The need to employ deep learning techniques comes from an important limitation encountered in other analysis tools: the detection process aims at recognising vulnerable code sections by matching them with the Spectre gadgets that have been identified so far, which amount to 15. However, this strategy falls short at recognising subtle code variations occuring in different programs.
+	The paper by Tol et al. targets this problem through the following contributions:
+	\begin{itemize}
+		\item They extend the current set of 15 gadgets to 1 million gadgets by applying a mutational fuzzing technique, creating an appropriate dataset for the deep learning algorithm.
+		\item They describe a specific implementation of a GAN, named \textit{SpectreGAN}, that is trained on the dataset mentioned in the preovious point to learn the distribution of existing Spectre gadgets.
+		\item They introduce \textit{FastSpec}, based on supervised neural network embeddings to identify potential gadgets faster that rule-based methods.
+	\end{itemize}
 	\bibliography{thesis_ref}{}
 	\bibliographystyle{acm}
 	
