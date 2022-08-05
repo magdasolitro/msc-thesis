@@ -132,8 +132,8 @@
 	Also in this case, we can provide a trivial \texttt{analysis} program that is guaranteed to be complete, namely the one that always returns true. In fact, if the consequence is true, the overall implication will always evaluate to true, independently from the truth value of the premise.
 	
 	\chapter{Spectre}
-	On January 2018, 
-	two works, \cite{Kocher2019} and \cite{Lipp2018}, destined to leave a permanent mark in the field of side channel attacks. More precisely \cite{Kocher2019} identified \textit{Spectre}, a family of attacks that leverage on an optimisation technique used in modern processors to read and write protected memory from a program's address space, while \cite{Lipp2018} describes \textit{Meltdown}, that is able to bypass the privilege checks that usually prevent a user process to access regions of memory that are under the control of the operating system. Both are classified as cache side-channel attacks and were found to affect Intel, ARM and AMD processors, present in the vast majority of desktops, laptops, cloud servers, and even smartphones\footnote{Source: \url{https://spectreattack.com/}}.
+	On January 2018, two major vulnerabilities affecting the vast majority of modern CPUs were disclosed, under the names of \textit{Spectre} \cite{Kocher2019} and \textit{Meltdown} \cite{Lipp2018}. These two attacks were independently discovered by various and so far they represent
+	two works, \cite{Kocher2019} and \cite{Lipp2018}, destined to leave a . More precisely \cite{Kocher2019} identified \textit{Spectre}, a family of attacks that leverage on an optimisation technique used in modern processors to read and write protected memory from a program's address space, while \cite{Lipp2018} describes \textit{Meltdown}, that is able to bypass the privilege checks that usually prevent a user process to access regions of memory that are under the control of the operating system. Both are classified as cache side-channel attacks and were found to affect Intel, ARM and AMD processors, present in the vast majority of desktops, laptops, cloud servers, and even smartphones\footnote{Source: \url{https://spectreattack.com/}}.
 	
 	This chapter is focused on Spectre, which is classified as an \textit{access-driven cache side-channel attack}, as it is based on the adversary's ability to monitor cache accesses made by the victim and measuring the time difference between a cache access and a memory access.
 	
@@ -262,15 +262,23 @@ cache = array[value];		// look-up
 
 	\chapter{Verification tools to detect Spectre}
 	
-	\textit{Formal verification} consists in checking that a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the resistance against Spectre-like attacks (be more precise). 
+	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the resistance against Spectre-like attacks (be more precise). 
+	
+	This work focuses on three different analysis tools:
 	\begin{itemize}
 		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
+		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution to prove a property called \textit{speculative noninterference}, which encodes security against speculative execution attacks;
+		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
 	\end{itemize}
 	
 	\section{Jasmin}
-	Jasmin is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In fact, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
+	Jasmin is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
 	
 	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes the code easier to verify, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
+	
+	\section{Spectector}
+	
+	\section{FastSpec}
 	
 	\bibliography{thesis_ref}{}
 	\bibliographystyle{acm}
