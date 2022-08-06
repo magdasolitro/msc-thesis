@@ -9,6 +9,7 @@
 \usepackage{color}
 \usepackage{listings}
 \usepackage{caption}
+\usepackage[toc,page]{appendix}
 
 \definecolor{green}{RGB}{60,179,113}
 \definecolor{violet}{RGB}{153,50,204}
@@ -72,6 +73,19 @@
 	\tableofcontents
 	
 	\mainmatter
+	
+	\chapter*{Glossary}
+	This preliminary chapter contains a summary of all the technical terms that are used throughout this thesis, that may be unknown to most readers who are not familiar with the subject. This provides a helpful reference for those who read selected chapters of this work and thus will not encounter all the definitions during the reading.
+	\chapter*{Notation}
+	This chapter constitutes a reference for all the notational conventions and the mathematical symbols used throughout this work, especially in the Static Analysis chapter. 
+	% ridefinisco lo spazio tra righe
+	\renewcommand{\arraystretch}{2.0}
+	% aumento lo spazio tra colonne
+	\setlength{\tabcolsep}{25pt}
+	\begin{tabular}{l l}
+		$\mathcal{L}$ & a generic programming language \\
+		$\mathcal{P}$ & a generic property, i.e. generic a set of programs
+	\end{tabular}\\
 	
 	\chapter{Introduction}
 	
@@ -267,17 +281,10 @@ cache = array[value];		// look-up
 	This work focuses on three (four?) different analysis tools:
 	\begin{itemize}
 		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
-		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through \textit{taint analysis}
-		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution to prove a property called \textit{speculative noninterference}, which encodes security against speculative execution attacks;
+		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through taint analysis (see Appendix \ref{appendix:prog_analysis});
+		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution (see Appendix \ref{appendix:prog_analysis}) to prove a property called \textit{speculative noninterference}, which encodes security against speculative execution attacks;
 		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
 	\end{itemize}
-
-	Before diving into the description and comparison between these tools, 
-	
-	\section{Background notions}
-	\subsection{Taint analysis}
-	\subsection{Symbolic execution}
-	\subsection{Generative Adversarial Networks (GANs)}
 	
 	\section{Jasmin}
 	\textit{Jasmin} is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
@@ -289,13 +296,83 @@ cache = array[value];		// look-up
 	\section{oo7}
 	
 	\section{FastSpec}
-	\textit{FastSpec} \cite{Tol2021} is a recent tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods (such as...). The need to employ deep learning techniques comes from an important limitation encountered in other analysis tools: the detection process aims at recognising vulnerable code sections by matching them with the Spectre gadgets that have been identified so far, which amount to 15. However, this strategy falls short at recognising subtle code variations occuring in different programs.
+	\textit{FastSpec} \cite{Tol2021} is a recent tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods (such as ...). The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 15. Even though it is conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
+	
 	The paper by Tol et al. targets this problem through the following contributions:
 	\begin{itemize}
-		\item They extend the current set of 15 gadgets to 1 million gadgets by applying a mutational fuzzing technique, creating an appropriate dataset for the deep learning algorithm.
+		\item They extend the current set of 15 gadgets to 1 million gadgets by applying a \textit{mutational fuzzing} technique, creating an appropriate dataset for the deep learning algorithm.
 		\item They describe a specific implementation of a GAN, named \textit{SpectreGAN}, that is trained on the dataset mentioned in the preovious point to learn the distribution of existing Spectre gadgets.
-		\item They introduce \textit{FastSpec}, based on supervised neural network embeddings to identify potential gadgets faster that rule-based methods.
+		\item They introduce \textit{FastSpec}, a tool based on supervised neural network embeddings, to identify potential gadgets faster that rule-based methods.
 	\end{itemize}
+	The rest of the section is organised in two parts: the first one describes how the authors generated the dataset of 1 million gadgets, while the second one deals with the detection of Spectre-like vulnerabilities through FastSpec. 
+	
+	All the background notions about the deep learning techniques needed to understand this tool are discussed in Appendix \ref{appendix:dl}.
+	\subsection{Gadget generation}
+	The generation of a large dataset of gadgets involves two steps...
+	\paragraph{Mutational fuzzing}
+	Firstly, the initial set of gadgets is increased by compiling each code snippet with three different compilers (GCC, clang, icc) and different optimisation options (\texttt{-oO}, \texttt{-o2}), obtaining 6 assembly functions for each gadget. Then, on every gadget we apply an algorithm that performs the following steps:
+	\begin{enumerate}
+		\item it inserts random assembly instructions in random locations of the gadget,
+		\item it checks whether the functional properties of the gadgets are preserved,
+		\item it applies a subroutine that checks whether the new gadget still leaks secrets through speculative execution.
+	\end{enumerate}
+	The second step is particularly imporant because it verifies whether the newly inserted instructions improperly modify the flags that are checked in the conditional jumps: if that is the case, the secret may be leaked without even exploiting speculative execution.
+	\paragraph{SpectreGAN}
+	The aim of SpectreGAN is to generate assembly functions that are vulnerable to Spectre without needing to insert random instructions throughout the code with the mutational fuzzing algorithm. Both the Generator, $G$, and the Discriminator, $D$, are implemented with a seq2seq architecture...
+	\subsection{FastSpec}
+	
+	\appendix
+	\chapter{Program analysis techniques}\label{appendix:prog_analysis}
+	\section{Taint analysis}
+	References: \cite{Newsome2005}, \cite{Bayer2009}, \cite{Yin2007}, \cite{Balzarotti2008}, \cite{NguyenTuong2005}.
+	\section{Symbolic execution}
+	
+	\chapter{Deep Learning}\label{appendix:dl}
+	\section{Generative Adversarial Networks (GANs)}
+	The Generative Adversarial Network \cite{Goodfellow2014} is a learning framework designed for the task of \textit{generative modelling}, an unsupervised learning task that involves the automatic discovering and learning of patterns in data distributions in such a way that the model can generate new examples that plausibly could have been drawn from the original data set. The innovative idea behind GANs lies in the learning strategy, that sees two actors involved:
+	\begin{itemize}
+		\item a \textbf{Generative} net, $G$, that generates data;
+		\item a \textbf{Discriminator} net, $D$, that evaluates these data.
+	\end{itemize}
+	Intuitively, the Discriminator should be able to distinguish authentic data from artificially generated data. The goal of the Generator is to produce, starting from a random data distribution, increasingly better data that will eventually fool the Discriminator. From a game theory point of view, the convergence of a GAN is reached when the generator and the discriminator reach a \textit{Nash equilibrium} \cite{Ratliff2013}.
+	\paragraph{Generator}
+	To produce a certain kind of data, we assume that there exists a probability distribution (referred to as \textbf{target distribution}, $p_t$) that describes that data we want to create: the points of the distribution represent vectors of features that characterize that type of data. The goal of the Generator is to be able to sample a random noise, $z$, from a normal or uniform distribution (denoted by $p_g$) and turn it into a point $x$  following the target distribution, through a function denoted by $Gen()$:
+	\[
+	x = Gen(z) \text{ with } z \sim p_g
+	\]
+	
+	Conceptually, $z$ represents the latent features of the images generated, for example, the colour or the shape. In fact, the space from which the Generator samples the seed z is also referred to as \textbf{latent space}.
+	\paragraph{Discriminator}
+	The Generator, alone, can only produce some random noise: the purpose of the Discriminator is to guide the Generator to create data that look more similar to the real ones. It's fundamental to underline that before the beginning of the adversarial exchange between the two nets, the Discriminator must be trained (in a supervised fashion) with a data set of real and fake data.
+	For each point in the training set, the net outputs the value $D(x)$, representing the probability that $x$ is real. Thus, what we \textit{ideally} want to obtain at the end of the training is that:
+	\[
+	D(x) = \begin{cases}
+		1 &\text{ if the input is real }\\
+		0 & \text{ otherwise }
+	\end{cases}
+	\]
+	Concretely, during the training, the goal is to \textit{maximize} the ability of discerning real data from fake ones:
+	\[
+	\max_D V(D) = \mathbb{E}_{x\sim p_t(x)}[\log D(x)] + \mathbb{E}_{z\sim p_z(z)}[1-(\log D(G(z)))]
+	\]
+	where $\mathbb{E}$ denotes the expected value.
+	
+	To measure the loss, it is possible to use \textbf{cross-entropy}, the most popular loss function for learning algorithms that use gradient descent.
+	\paragraph{Adversarial learning}
+	Once the Discriminator is properly trained, the Generator enters into play, and the adversarial confrontation begins. The goal of the Generator is to minimize the difference between the data it generates and real data:
+	\[
+	\min_G V(G) = \mathbb{E}_{z\sim p_z(z)}[\log(1-D(G(z)))]
+	\]
+	Overall, the two nets play a so-called \textbf{minimax game}:
+	\[
+	\min_G \max_D V(D,G) = \mathbb{E}_{x\sim p_t(x)}[\log D(x)] + \mathbb{E}_{z\sim p_z(z)}[\log (1-D(G(z)))]
+	\]
+	where $V(D,G)$ represents the value function.
+	
+	The last equation makes it clear why this style of training is called \textit{adversarial}: while the Generator tries to minimise a function, the Discriminator tries to maximise it, thus the two networks have opposite goals. (maybe explain better..?)
+	
+	\section{Natural Language Processing (NLP)}
+
 	\bibliography{thesis_ref}{}
 	\bibliographystyle{acm}
 	
