@@ -34,6 +34,7 @@
 	numbers=left,
 	numberstyle=\tiny\color{gray},
 	keywordstyle=\color{blue},
+	morekeywords={bool},
 	commentstyle=\color{green},
 	stringstyle=\color{mauve},
 	breaklines=true,
@@ -96,6 +97,8 @@
 		\item \textbf{automation:} being able to check the properties of a program automatically relieve humans from a cumbersome and error-prone process;
 		\item \textbf{efficacy:} static analysis can detect flaws that appear only very rarely during execution, and thus would be hard to spot through simple testing.
 	\end{itemize}
+	...
+	\section{Theoretical fundations}
 	However, static analysis is not infallible, which means that it does not always provide the correct results. To be more precise, the effectiveness of static analysis has to confront some intrinsic limits of computation, namely the undecidability of the \textit{Halting problem} and \textit{Rice's theorem}. 
 	\theoremstyle{theorem}
 	\newtheorem{thm}{Theorem}
@@ -144,6 +147,69 @@
 		\]
 	\end{defn}
 	Also in this case, we can provide a trivial \texttt{analysis} program that is guaranteed to be complete, namely the one that always returns true. In fact, if the consequence is true, the overall implication will always evaluate to true, independently from the truth value of the premise.
+	
+	\section{Practical approaches and their challenges}
+	\subsection{Taint analysis}
+	Taint analysis is a technique that can be applied both statically or dynamically. This approach involves labelling each variable supplied to the program by an untrusted source as \textit{tainted}, assuming that the untrusted source could be an adversary trying to attack the system.
+	Then, every variable in the program whose value is dependent from tainted values is also marked as tainted. In this way, we can keep track of the propagation of tainted data during the program execution and detect when tainted data is used in dangerous ways.
+	
+	In a Spectre-PHT attack, for instance, the malicious value can be supplied repeatedly to a conditional branch in order to induce the branch predictor to make the wrong guess about the outcome of the expression evaluation. In the following example, the tainted variables are marked in red:
+	
+	% DO THE HIGHLIGHTING!!
+	\begin{lstlisting}
+int checkValue(int x){
+	if(x < len(array1)){
+		y = array2[array1[x] * 4096;
+	}
+	return y;
+}
+	\end{lstlisting}
+	Recent works used this type of analysis for various purposes, such as vulnerability detection \cite{Newsome2005}, malware analysis \cite{Bayer2009} \cite{Yin2007}, and web applications \cite{Balzarotti2008} \cite{NguyenTuong2005}. In this thesis, we encounter this technique with oo7 \cite{Wang2019}.
+	
+	\subsubsection{Challenges in taint analysis}
+	\subsection{Symbolic execution}
+	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs \cite{Baldoni2018}. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
+	
+	During the symbolic execution of a program, the analysis engine keeps track the following information:
+	\begin{itemize}
+		\item The next \textit{statement} to evaluate (\texttt{stmt}).
+		\item A \textit{symbolic store} $\sigma$, that maps the variables of the program either with expressions over concrete values or with symbolic values.
+		\item Some \textit{path constraints} $\pi$, namely "a formula that expresses a set of assumptions on the symbols due to branches taken in the execution to reach \texttt{stmt}" \cite{Baldoni2018}.
+	\end{itemize}
+	Different execution paths distinguish themselves by the assumptions that are made about the symbolic values.
+	
+	To give an idea about how symbolic execution works, consider the following piece of code:
+	\begin{lstlisting}
+int func(int a){
+	int x = 1;
+	bool y = true;
+	if (a != 0){
+		...
+	}
+}
+	\end{lstlisting} 
+	At the beginning of the symbolic execution, the state maintained by the engine will be:
+	\[
+	(\textcolor{blue}{\texttt{stmt}}, \textcolor{violet}{\sigma}, \textcolor{green}{\pi}) = (\textcolor{blue}{\texttt{int x = 1}}, \textcolor{violet}{\sigma = \{a \mapsto \alpha_a\}}, \textcolor{green}{\pi = true})
+	\]
+	As you can see, since \texttt{a} is a paramenter that can be known only at run time, the symbolic store will assign it to the symbolic value $\alpha_a$: this is a way of stating that, according to our current knowledge, \texttt{a} can assume any value in the range of integers, but we don't make any assumptions about it because it's not necessary (yet). $\pi$ is initially set to \textit{true} because we are currently making no assumption about the value of any symbol.
+	
+	In the next step, we show how the state must be modified and we highlight the components of the state that change:
+	\[
+	(\textcolor{blue}{\texttt{stmt}}, \textcolor{violet}{\sigma}, \pi) = (\textcolor{blue}{\texttt{bool y = true}}, \textcolor{violet}{\sigma = \{a \mapsto \alpha_a\, x \mapsto 1\}}, \pi = true)
+	\] 
+	Once the instruction on line 2 is executed, the symbolic store can map the variable \texttt{x} with the \textit{concrete} value 1, which can be inferred statically.
+	
+	The next instruction involves a branch conditioned on the value of \texttt{a}, which is not known. Therefore, the symbolic execution engine produces two paths, one for $\alpha_a = 0$ and the other for $\alpha_a \neq 0$:
+	\[
+	(\textcolor{blue}{\texttt{stmt}}, \sigma, \textcolor{green}{\pi}) = (\textcolor{blue}{\texttt{if (a != 0)}}, \sigma = \{a \mapsto \alpha_a\, x \mapsto 1\}, \textcolor{green}{\pi = \{\alpha_a = 0\}})
+	\]
+	\[
+	(\textcolor{blue}{\texttt{stmt}}, \sigma, \textcolor{green}{\pi}) = (\textcolor{blue}{\texttt{if (a != 0)}}, \sigma = \{a \mapsto \alpha_a\, x \mapsto 1\}, \textcolor{green}{\pi = \{\alpha_a \neq 0\}})
+	\]
+	Through this kind of branching, the symbolic execution evolves as a tree until the program has terminated or until we gained enough knowledge to determine whether the property of interest is satisfied or not.
+	\subsubsection{Challenges in symbolic execution}
+	The tree structure of a symbolic execution immediately shows one of the problems of this approach, which \textbf{path explosion}: as the size of the program grows, the number of feasible paths grows exponentially, and can even be infinite if the program contains unbounded loop iterations.
 	
 	\chapter{Spectre}
 	On January 2018, two major vulnerabilities affecting the vast majority of modern CPUs were disclosed, under the names of \textit{Spectre} \cite{Kocher2019} and \textit{Meltdown} \cite{Lipp2018}. These two attacks were independently discovered by various and so far they represent
@@ -322,11 +388,6 @@ cache = array[value];		// look-up
 	\subsection{FastSpec}
 	
 	\appendix
-	\chapter{Program analysis techniques}\label{appendix:prog_analysis}
-	\section{Taint analysis}
-	References: \cite{Newsome2005}, \cite{Bayer2009}, \cite{Yin2007}, \cite{Balzarotti2008}, \cite{NguyenTuong2005}.
-	\section{Symbolic execution}
-	
 	\chapter{Deep Learning}\label{appendix:dl}
 	\section{Generative Adversarial Networks (GANs)}
 	The Generative Adversarial Network \cite{Goodfellow2014} is a learning framework designed for the task of \textit{generative modelling}, an unsupervised learning task that involves the automatic discovering and learning of patterns in data distributions in such a way that the model can generate new examples that plausibly could have been drawn from the original data set. The innovative idea behind GANs lies in the learning strategy, that sees two actors involved:
