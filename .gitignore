@@ -8,3 +8,6 @@ thesis_draft2.log
 thesis_draft2.out
 tex files/thesis_draft2.synctex.gz
 tex files/thesis_draft2.toc
+.DS_Store
+tex files/.DS_Store
+tex files/texput.log

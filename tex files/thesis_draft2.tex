@@ -78,6 +78,7 @@
 	
 	\chapter*{Glossary}
 	This preliminary chapter contains a summary of all the technical terms that are used throughout this thesis, that may be unknown to most readers who are not familiar with the subject. This provides a helpful reference for those who read selected chapters of this work and thus will not encounter all the definitions during the reading.
+	
 	\chapter*{Notation}
 	This chapter constitutes a reference for all the notational conventions and the mathematical symbols used throughout this work, especially in the Static Analysis chapter. 
 	\renewcommand{\arraystretch}{2.0}
@@ -153,21 +154,45 @@
 	Then, every variable in the program whose value is dependent from tainted variables is also marked as tainted. In this way, we can keep track of the propagation of tainted data during the program execution and detect when this data is used in dangerous ways. Taint analysis can be used to identify parts of code vulnerable to Spectre: for instance, in a Spectre-PHT attack, certain values can be supplied repeatedly to a conditional branch to induce a misprediction. The following example shows a Spectre-PHT gadget where the tainted variables are marked in red:
 	
 	\begin{lstlisting}[escapechar=!]
-		int checkValue(int !\colorbox{red}{x}!){
-			if(!\colorbox{red}{x}! < len(array1)){
-				!\colorbox{red}{y}! = array2[array1[!\colorbox{red}{x}!] * 4096;
-			}
-			return y;
-		}
+int checkValue(int !\colorbox{red}{x}!){
+	if(!\colorbox{red}{x}! < len(array1)){
+		!\colorbox{red}{y}! = array2[array1[!\colorbox{red}{x}!] * 4096;
+	}
+	return y;
+}
 	\end{lstlisting}
 	The parameter \texttt{x} is supplied by the user, therefore is marked as tainted. The value of \texttt{y}, determined in line 3, depends on \texttt{x}, thus \texttt{y} becomes automatically tainted. This is an example of taint (dynamic) analysis \textit{based on data flow}, because it involves marking external taint data and tracking its propagation throughout the execution.
 	
 	This type of analysis can be used for vulnerability detection \cite{Newsome2005}, malware analysis \cite{Bayer2009} \cite{Yin2007}, and web applications \cite{Balzarotti2008} \cite{NguyenTuong2005}, and can be applied both statically or dynamically.
 	
-	Dynamic taint analysis can be based either on \textit{data flow} (the example above is an instance of this approach) or on \textit{control flow}. The latter involves constructing a control flow graph (CFG) of the program, by examining the branching instructions that govern the execution of the code.
+	Dynamic taint analysis can be based either on \textit{data flow} (the example above is an instance of this approach) or on \textit{control flow}. The latter involves constructing a control flow graph (CFG) of the program, by examining the branching instructions that govern the execution of the code \cite{Dai2018}.
 	
 	\subsubsection{Challenges in taint analysis}
+	The main issues that taint analysis encounters are \textbf{under-tainting}, \textbf{over-tainting} and \textbf{state space explosion}. Let's start with the first one: under-tainting means that the analysis tool does not mark as tainted a data that was should be marked as such. This happens when the data is not arithmetically derived by an untrusted input or, more generally, is not linked to such input by an explicit instruction in the program, but is still influenced by it. This phenomenon causes the detection of \textbf{false negatives}, namely the tool recognises a piece of code as secure, even though it's not. A clever example of how this can occur is proposed in \cite{Newsome2005}:
+	\begin{lstlisting}
+if(x==0){
+	y=0;
+} else if (x==1){
+	y=1;
+} else if (x==2){
+	y=2;
+} ...
+	\end{lstlisting}
+	This conditional structure goes on in the form
+\begin{lstlisting}[mathescape=true]
+if(x == $n$){
+	y = $n$;
+}
+\end{lstlisting}
+	This program is semantically equivalent to the following instruction:
+	\begin{lstlisting}
+y = x;
+	\end{lstlisting}
+	However, a taint analysis will mark \texttt{y} as tainted in the last instruction, but not in the first example. Under-tainting affects TaintCheck \cite{Newsome2005}, even though the authors proposed some mitigations to the problem.
 	
+	The opposite problem is over-tainting, which leads to the detection of \textbf{false positives}: a piece of code can be evaluated as insecure, even in the absence of any feasible execution that taints a certain data. As already stated previously in this chapter, false positives are preferred to false negatives, since the latter can give a false sense of security and fail to notify potential vulnerabilities. One source of over-tainting can be a conservative extraction of the Control Flow Graph (CFG): the construction of an accurate graph from the binary is often challenging, due to the difficulty in determining the targets of indirect branches and function calls. For this reason, tools such as oo7 \cite{Wang2019} use a conservative approximation of the CFG, which can contain more edges that expected.
+	
+	The last issue that 
 	\subsection{Symbolic execution}
 	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution \cite{Baldoni2018}: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
 	
@@ -179,13 +204,13 @@
 	\end{itemize}
 	Different execution paths distinguish themselves by the assumptions that are made about the symbolic values. To give an idea about how this process works, consider the following piece of code:
 	\begin{lstlisting}
-		int func(int a){
-			int x = 1;
-			bool y = true;
-			if (a != 0){
-				...
-			}
-		}
+int func(int a){
+	int x = 1;
+	bool y = true;
+	if (a != 0){
+		...
+	}
+}
 	\end{lstlisting} 
 	At the beginning of the symbolic execution, the state maintained by the engine will be:
 	\[
