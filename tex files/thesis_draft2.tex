@@ -90,16 +90,21 @@
 	
 	\chapter{Introduction}\label{chapter:intro}
 	
-	\chapter{Static Analysis}\label{chapter:static_analysis}
-	Static analysis is a set of automated techniques used to inspect the code to find possible flaws or vulnerabilities, without executing the program. The need of such tools is dictated by many reasons:
+	\chapter{Static analysis for cybersecurity}\label{chapter:static_analysis}
+	Static analysis is a set of automated techniques used to inspect a program to check whether it satisfies certain properties, without executing it. The origins of static analysis date back to the Seventies, when it was initially developed to speed up the compilation process. Nowadays, these techniques are used for a multitude of purposes, such as program verification, synthesis of optimised code, and certification of critical software applications \cite{Rival2020}. 
+	
+	This chapter will provide an insight on the theoretical principles and practical approaches of static analysis, with particular attention to the cybersecurity perspective. Some of the question concerning safety and security that we can tackle with static analysis are, for example: will the software crash under certain circumstances? Will specific inputs give illicit access to information that shouldn't be disclosed? Does the software accomplish \textit{exactly} what it is programmed for or will there be undesired side effects? We can try to give an answer to these questions through intensive testing, but this approach is destined to be a coarse approximation of the correct answer: the domain of possible inputs that need to be examined is often far too broad to be tested in a reasonable amount of time, but selecting a small subset of inputs is likely to leave out those few that can cause a malfunctioning, for statistical reasons. Furthermore, if the correct behaviour of a program is crucial for the safety of human lives, it's clear that the analysis of the program cannot be left to inaccurate methods.
+	These are just a couple of reasons that highlight the necessity of techniques that allow us to verify quickly and precisely the properties of a program.
+	
+	The next section provides a theoretical argument that offers a solid base for the research on static analysis.
+	\section{Theoretical foundations}
+	The goals of static analysis are ambitious, because it aims to provide tools that can deliver the following advantages:
 	\begin{itemize}
-		\item \textbf{speed:} the possibility of using fast methods to analyse code implies being able to perform controls much more frequently; 
-		\item \textbf{automation:} being able to check the properties of a program automatically relieve humans from a cumbersome and error-prone process;
-		\item \textbf{efficacy:} static analysis can detect flaws that appear only very rarely during execution, and thus would be hard to spot through simple testing.
+		\item \textbf{Speed:} the possibility of using methods to analyse code quickly implies being able to perform more controls, more frequently; 
+		\item \textbf{Automation:} being able to check the properties of a program automatically relieve humans from a cumbersome and error-prone process;
+		\item \textbf{Precision:} static analysis can detect flaws that appear only very rarely during execution, and thus would be hard to spot through simple testing.
 	\end{itemize}
-	...
-	\section{Theoretical fundations}
-	However, static analysis is not infallible, which means that it does not always provide the correct results. To be more precise, the effectiveness of static analysis has to confront some intrinsic limits of computation, namely the undecidability of the \textit{Halting problem} and \textit{Rice's theorem}. 
+	These objectives can be partially achieved, but we cannot have it all (REWRITE):  static analysis is not infallible, which means that it does not always provide the correct results. To be more precise, the effectiveness of static analysis has to confront some intrinsic limits of computation, namely the undecidability of the \textit{Halting problem} and \textit{Rice's theorem}. 
 	\theoremstyle{theorem}
 	\newtheorem{thm}{Theorem}
 	\begin{thm}[Halting problem] Let $\mathcal{L}$ be the set of all programs that can be written in a certain language, and let $p$ be one of such programs. 
@@ -190,9 +195,21 @@ y = x;
 	\end{lstlisting}
 	However, a taint analysis will mark \texttt{y} as tainted in the last instruction, but not in the first example. Under-tainting affects TaintCheck \cite{Newsome2005}, even though the authors proposed some mitigations to the problem.
 	
-	The opposite problem is over-tainting, which leads to the detection of \textbf{false positives}: a piece of code can be evaluated as insecure, even in the absence of any feasible execution that taints a certain data. As already stated previously in this chapter, false positives are preferred to false negatives, since the latter can give a false sense of security and fail to notify potential vulnerabilities. One source of over-tainting can be a conservative extraction of the Control Flow Graph (CFG): the construction of an accurate graph from the binary is often challenging, due to the difficulty in determining the targets of indirect branches and function calls. For this reason, tools such as oo7 \cite{Wang2019} use a conservative approximation of the CFG, which can contain more edges that expected.
+	The opposite problem is over-tainting, which leads to the detection of \textbf{false positives}: a piece of code can be evaluated as insecure, even in the absence of any feasible execution that taints a certain data. As already stated previously in this chapter, false positives are preferred to false negatives, since the latter can give a false sense of security and fail to notify potential vulnerabilities. One source of over-tainting can be a conservative extraction of the Control Flow Graph (CFG), which is defined as follows:
+	\begin{defn}[Control Flow Graph (CFG)]
+		A \textit{control flow graph (CFG)} is a directed graph $G=(V,E)$ in which nodes represent the program's instructions, while an edge $u \rightarrow v$ represents a possible flow from the instruction $u$ to the instruction $v$. This means that there exists at least one run of the program in which the execution of $u$ is followed immediately by the execution of $v$.
+		
+		The set $V$ of nodes contains also two special nodes: \textit{START}, that has no predecessors and from which every node is reachable, and \textit{END}, which has no successors and is reachable from every node.
+	\end{defn}
 	
-	The last issue that 
+	The construction of an accurate graph from the binary is often challenging, due to the difficulty in determining the targets of indirect branches and function calls. For this reason, tools such as oo7 \cite{Wang2019} use a conservative approximation of the CFG, which can contain more edges that expected.
+	
+	The last issue worth mentioning is the state space explosion, which can occur during the construction of the CFG or the Control Dependency Graph (CDG). The latter is defined as follows: (TO BE REVIEWED)
+	
+	\begin{defn}[Control Dependency Graph (CDG)]
+		A \textit{control dependency graph (CDG)} is a directed graph $G=(V,E)$ in which nodes represent the program's variables, while an edge $x\rightarrow y$ expresses the fact that the value of $y$ depends from the value of $x$. 
+	\end{defn}
+	The CDG is used by the analyser to keep track of how the tainted data affects the other variables in the program. However, as the complexity of the program increases, the size of these graphs grows exponentially and can become infeasible to analyse.
 	\subsection{Symbolic execution}
 	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution \cite{Baldoni2018}: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
 	
@@ -233,9 +250,10 @@ int func(int a){
 	\]
 	Through this kind of branching, the symbolic execution evolves as a tree until the program has terminated or until we gained enough knowledge to determine whether the property of interest is satisfied or not.
 	\subsubsection{Challenges in symbolic execution}
-	The tree structure of a symbolic execution immediately shows one of the problems of this approach, which \textbf{path explosion}: as the size of the program grows, the number of feasible paths grows exponentially, and can even be infinite if the program contains unbounded loop iterations. Although an exhaustive exploration of the state space is the only way to guarantee a sound and complete analysis, a partial exploration is sufficient in many scenarios to prove a certain property, thus the problem of path explosion can often be circumvented.
+	The tree structure of a symbolic execution suggests that this kind of analysis suffers of the same issue that we have already encoutered with taint analysis, namely \textbf{path explosion} (or state space explosion): as the size of the program grows, the number of feasible paths grows exponentially, and can even be infinite if the program contains unbounded loop iterations. Although an exhaustive exploration of the state space is the only way to guarantee a sound and complete analysis, a partial exploration is sufficient in many scenarios to prove a certain property, thus the problem of path explosion can often be circumvented.
 	
-	Another problem of symbolic execution concern the resolution of non-linear arithmetic constraints, whose result is more complex to compute and thus can significantly affect the efficiency of the whole process. The abstract execution of the piece of code showed above required to evaluate only a simple expression like $\alpha_a = 0$ or $\alpha_a \neq 0$, but as the complexity of the code increases, the arithmetic expressions needed to complete the analysis can become significantly more difficult to solve.
+	Another problem of symbolic execution concerns \textbf{constraint solving}. As precisely stated in \cite{Baldoni2018}, "in a symbolic executor, constraint solving plays a crucial role in checking the feasibility of a path, generating assignments to symbolic variables, and verifying assertions". These constraints are expressed in a logical language and their truth value is evaluated by decision procedures called "constraint solvers". 
+	Finding a solution for such formulas is notoriously an NP-complete problem.  For this reason, one of the most popular approaches of constraint solving consists in mapping the formula to an instance of the boolean satisfiability problem (also known as SAT, see Appendix ...), a famous NP-complete problem for which many efficient algorithms have been developed. For those problems that cannot be easily mapped to SAT, we can use Satisfiability Modulo Theories (SMT), that generalize the SAT problem with supporting theories to capture more complex formulas. Even though some significant advances has been accomplished in recent years to optimise the search of a solution, complexity remains a major obstacle to the scalability of symbolic execution to large programs. Moreover, not even SMT solvers are powerful enough to handle constraints that involve certain operations, such as non-linear arithmetic, which prevents us from exploiting the advantages of optimised SMT solvers.
 	
 	\chapter{Spectre}\label{chapter:spectre}
 	On January 2018, two major vulnerabilities affecting the vast majority of modern CPUs were disclosed, taking the names of \textit{Spectre} \cite{Kocher2019} and \textit{Meltdown} \cite{Lipp2018}. These two attacks were independently discovered by various researchers and were published in 
