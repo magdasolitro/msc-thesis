@@ -142,7 +142,7 @@
 		\forall p \in \mathcal{L} \st \text{\texttt{analyse}}(p) = \text{\textbf{true}} \Longrightarrow p \text{ satisfies } \mathcal{P}
 		\]
 	\end{defn}
-	A trivial \texttt{analysis} program that is guaranteed to be sound is the one that always returns false: by invalidating the premise, it makes the overall implication to be true, even though such analyser would clearly be of no utility.
+	In simple terms, a proof system is sound if all the statements it proves are actually true. A trivial \texttt{analysis} program that is guaranteed to be sound is the one that always returns false: by invalidating the premise, it makes the overall implication to be true, even though such analyser would clearly be of no utility.
 	
 	For the definition of completeness, we use the same notation of the previous definition.
 	\begin{defn}[Completeness]
@@ -151,8 +151,11 @@
 		\forall p \in \mathcal{L} \st p \text{ satisfies } \mathcal{P} \Longrightarrow \text{\texttt{analyse}}(p) = \text{\textbf{true}} 
 		\]
 	\end{defn}
+	As the definition suggests, a \textit{complete} analyser is one that is able to prove \textit{all} the properties that are satisfied by a program. More generally, a formal system is said to be complete with respect to a particular property, if every formula that satisfies that property is a theorem (i.e. can be proved) within the system.
+	
 	Also in this case, we can provide a trivial \texttt{analysis} program that is guaranteed to be complete, namely the one that always returns true. In fact, if the consequence is true, the overall implication will always evaluate to true, independently from the truth value of the premise.
 	
+	Soundness and completeness are two essential aspect of a correct analysis, but an inherent limit of computability prevents us from having both. This limit comes Gödel's Incompleteness Theorems, which essentially show that there is an intrinsic gap in mathematics between \textit{proof} and \textit{truth}. These theorems are extremely complex and profound, and thus we will not dive into the details, but the interested readers can find out more about it in \cite{Odifreddi1989}, \cite{Rogers1987}, \cite{Hinman2007}.
 	\section{Practical approaches and related challenges}
 	This section discusses the general ideas behind some of the most effective approaches used by the tools discussed in Chapter \ref{chapter:verification}. The description should be considered as a high-level introduction whose aim is to give an idea of the mechanisms leveraged by these tools.
 	\subsection{Taint analysis}
