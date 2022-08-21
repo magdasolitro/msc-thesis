@@ -154,6 +154,7 @@
 	Also in this case, we can provide a trivial \texttt{analysis} program that is guaranteed to be complete, namely the one that always returns true. In fact, if the consequence is true, the overall implication will always evaluate to true, independently from the truth value of the premise.
 	
 	\section{Practical approaches and related challenges}
+	This section discusses the general ideas behind some of the most effective approaches used by the tools discussed in Chapter \ref{chapter:verification}. The description should be considered as a high-level introduction whose aim is to give an idea of the mechanisms leveraged by these tools.
 	\subsection{Taint analysis}
 	Taint analysis is a technique that involves labelling each variable supplied to the program by an untrusted source as \textit{tainted}, assuming that the untrusted source could be an adversary trying to attack the system.
 	Then, every variable in the program whose value is dependent from tainted variables is also marked as tainted. In this way, we can keep track of the propagation of tainted data during the program execution and detect when this data is used in dangerous ways. Taint analysis can be used to identify parts of code vulnerable to Spectre: for instance, in a Spectre-PHT attack, certain values can be supplied repeatedly to a conditional branch to induce a misprediction. The following example shows a Spectre-PHT gadget where the tainted variables are marked in red:
@@ -195,21 +196,19 @@ y = x;
 	\end{lstlisting}
 	However, a taint analysis will mark \texttt{y} as tainted in the last instruction, but not in the first example. Under-tainting affects TaintCheck \cite{Newsome2005}, even though the authors proposed some mitigations to the problem.
 	
-	The opposite problem is over-tainting, which leads to the detection of \textbf{false positives}: a piece of code can be evaluated as insecure, even in the absence of any feasible execution that taints a certain data. As already stated previously in this chapter, false positives are preferred to false negatives, since the latter can give a false sense of security and fail to notify potential vulnerabilities. One source of over-tainting can be a conservative extraction of the Control Flow Graph (CFG), which is defined as follows:
+	The opposite problem is \textbf{over-tainting}, which leads to the detection of false positives: a piece of code can be evaluated as insecure, even in the absence of any feasible execution that taints a certain data. As already stated previously in this chapter, false positives are preferred to false negatives, since the latter can give a false sense of security and fail to notify potential vulnerabilities. One source of over-tainting can be a conservative extraction of the Control Flow Graph (CFG), which is defined as follows:
 	\begin{defn}[Control Flow Graph (CFG)]
-		A \textit{control flow graph (CFG)} is a directed graph $G=(V,E)$ in which nodes represent the program's instructions, while an edge $u \rightarrow v$ represents a possible flow from the instruction $u$ to the instruction $v$. This means that there exists at least one run of the program in which the execution of $u$ is followed immediately by the execution of $v$.
-		
-		The set $V$ of nodes contains also two special nodes: \textit{START}, that has no predecessors and from which every node is reachable, and \textit{END}, which has no successors and is reachable from every node.
+		A \textit{control flow graph (CFG)} is a directed graph $G=(V,E)$ in which nodes represent the program's instructions, while an edge $u \rightarrow v$ represents a possible flow from the instruction $u$ to the instruction $v$. This means that there exists at least one run of the program in which the execution of $u$ is followed immediately by the execution of $v$. The set $V$ of nodes contains also two special nodes: \textit{START}, that has no predecessors and from which every node is reachable, and \textit{END}, which has no successors and is reachable from every node.
 	\end{defn}
 	
 	The construction of an accurate graph from the binary is often challenging, due to the difficulty in determining the targets of indirect branches and function calls. For this reason, tools such as oo7 \cite{Wang2019} use a conservative approximation of the CFG, which can contain more edges that expected.
 	
-	The last issue worth mentioning is the state space explosion, which can occur during the construction of the CFG or the Control Dependency Graph (CDG). The latter is defined as follows: (TO BE REVIEWED)
+	The last issue worth mentioning is the \textbf{state space explosion} (also known as path explosion), which can occur during the construction of the CFG or the Control Dependency Graph (CDG). The latter is defined as follows: (TO BE REVIEWED)
 	
 	\begin{defn}[Control Dependency Graph (CDG)]
-		A \textit{control dependency graph (CDG)} is a directed graph $G=(V,E)$ in which nodes represent the program's variables, while an edge $x\rightarrow y$ expresses the fact that the value of $y$ depends from the value of $x$. 
+		A \textit{control dependency graph (CDG)} \cite{Krinke2007} is a directed graph $G=(V,E)$ in which nodes represent the program's statements or expressions, while an edge $x\rightarrow y$ expresses the fact that the statement $x$ assigns a variable which is used in $y$, which means that the mere execution of $y$ depends on the value of the expression $x$. 
 	\end{defn}
-	The CDG is used by the analyser to keep track of how the tainted data affects the other variables in the program. However, as the complexity of the program increases, the size of these graphs grows exponentially and can become infeasible to analyse.
+	The CDG is used by the analyser to keep track of how the tainted data affects the other variables in the program. However, as the complexity of the program increases, the size of these graphs grows exponentially and can become infeasible to analyse. This issue is also encountered in another popular approach, symbolic execution, which is discussed in the below. 
 	\subsection{Symbolic execution}
 	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution \cite{Baldoni2018}: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
 	
@@ -253,7 +252,7 @@ int func(int a){
 	The tree structure of a symbolic execution suggests that this kind of analysis suffers of the same issue that we have already encoutered with taint analysis, namely \textbf{path explosion} (or state space explosion): as the size of the program grows, the number of feasible paths grows exponentially, and can even be infinite if the program contains unbounded loop iterations. Although an exhaustive exploration of the state space is the only way to guarantee a sound and complete analysis, a partial exploration is sufficient in many scenarios to prove a certain property, thus the problem of path explosion can often be circumvented.
 	
 	Another problem of symbolic execution concerns \textbf{constraint solving}. As precisely stated in \cite{Baldoni2018}, "in a symbolic executor, constraint solving plays a crucial role in checking the feasibility of a path, generating assignments to symbolic variables, and verifying assertions". These constraints are expressed in a logical language and their truth value is evaluated by decision procedures called "constraint solvers". 
-	Finding a solution for such formulas is notoriously an NP-complete problem.  For this reason, one of the most popular approaches of constraint solving consists in mapping the formula to an instance of the boolean satisfiability problem (also known as SAT, see Appendix ...), a famous NP-complete problem for which many efficient algorithms have been developed. For those problems that cannot be easily mapped to SAT, we can use Satisfiability Modulo Theories (SMT), that generalize the SAT problem with supporting theories to capture more complex formulas. Even though some significant advances has been accomplished in recent years to optimise the search of a solution, complexity remains a major obstacle to the scalability of symbolic execution to large programs. Moreover, not even SMT solvers are powerful enough to handle constraints that involve certain operations, such as non-linear arithmetic, which prevents us from exploiting the advantages of optimised SMT solvers.
+	Finding a solution for such formulas is notoriously an NP-complete problem: for this reason, one of the most popular approaches to constraint solving consists in mapping the formula to an instance of the boolean satisfiability problem (also known as SAT, see Appendix \ref{appendix:complexity}), a famous NP-complete problem for which many efficient algorithms have been developed. For those problems that cannot be easily mapped to SAT, we can use Satisfiability Modulo Theories (SMT), that generalize the SAT problem with supporting theories to capture more complex formulas. Even though some significant advances has been accomplished in recent years to optimise the search of a solution, complexity remains a major obstacle to the scalability of symbolic execution to large programs. Moreover, not even SMT solvers are powerful enough to handle constraints that involve certain operations, such as non-linear arithmetic, which prevents us from exploiting the advantages of optimised SMT solvers.
 	
 	\chapter{Spectre}\label{chapter:spectre}
 	On January 2018, two major vulnerabilities affecting the vast majority of modern CPUs were disclosed, taking the names of \textit{Spectre} \cite{Kocher2019} and \textit{Meltdown} \cite{Lipp2018}. These two attacks were independently discovered by various researchers and were published in 
@@ -267,8 +266,8 @@ int func(int a){
 	\subsection{Out-of-Order execution and micro-operations}\label{ooo-exec}
 	When executing a program, the processor splits single assembly instructions in a series of lower-level operations called \textit{micro-operations} (also abbreviated as micro-ops or $\mu$-ops): this has the advantage of allowing the CPU to execute different part of the instructions in different moments, based on the current availability of the data \cite{Fog2021}. For example, consider the following piece of code, written in Intel syntax:
 	\begin{lstlisting}
-		add eax, ebx
-		add [reg], eax
+add eax, ebx
+add [reg], eax
 	\end{lstlisting}
 	The instruction on line 1 adds the content of two cache registers, \texttt{eax} and \texttt{ebx}. This means that the data will be immediately available to the CPU and thus this instruction doesn't need to be split in more than one $\mu$-op. The instruction on line 2, instead, is much different: it requires to (i) retrieve \texttt{[reg]}, namely the data located at the memory address stored in \texttt{reg}, then (ii) add it to the content of \texttt{eax}, and finally (iii) to write the result back to \texttt{[reg]}. Therefore, up to two memory accesses are needed to complete the instruction, but since these accesses are very time-consuming, the CPU splits the instructions into three $\mu$-ops (corresponding to the three step described), so that it can execute other tasks while it waits for the data to be accessible, avoiding to waste hundreds of clock cycles and thus speeding up the computation. This is precisely what is referred to as \textit{out-of-order execution}. This paradigm, however, comes with a challenge: when executing $\mu$-ops out of order, the CPU must establish whether there are dependencies between different instructions that can obstacle the completion of certain tasks.	For example, let's consider again the two assembly instructions written above: note that the addition on line 2 involves \texttt{eax}, which is modified by the previous addition. This means that the micro-operation (ii) can't be executed before the result of the previous addition is not stored in \texttt{eax}. To implement out-of-order execution successfully, the CPU uses a mechanism called \textit{memory disambiguation}, accurately described in \ref{sec:spectre-stl}, to detect and resolve this kind of dependencies. 
 	
@@ -280,14 +279,14 @@ int func(int a){
 	\paragraph{Time-driven side channels} In this case, the adversary keeps track of the execution time of the program and use that information to infer what data is loaded into the cache. 
 	A typical example of timing attack targets the modular exponentiation function used in many public key cryptographic algorithm, included RSA. Modular exponentiation consists in raising a large number (i.e. the plaintext or the ciphertext) to a large exponent (i.e. the public key or the secret key respectively), which is extremely time consuming, since it requires to perform repeated multiplications using large integers. The subprocedure \texttt{square-and-multiply}, allows to do this computation efficiently:
 	\begin{lstlisting}
-		square-and-multiply(M, e, N){
-			R = 1
-			for (i=0 to n-1){
-				R = R^2 mod N
-				if(e[i] == 1){ R = R * M mod N }
-			}	
-			return R
-		}
+square-and-multiply(M, e, N){
+	R = 1
+	for (i=0 to n-1){
+		R = R^2 mod N
+		if(e[i] == 1){ R = R * M mod N }
+	}	
+	return R
+}
 	\end{lstlisting}
 	where \texttt{M} is the message we want to encrypt (or decrypt), \texttt{e} is the exponent, \texttt{n} is the its length, \texttt{N} is the modulo, \texttt{R} is the result. As one can see, for each bit of the secret or public key \texttt{e}, the message is squared. If the current bit of the exponent is 1, then an additional multiplication is performed on the result: this means that, when the value of \texttt{e[i]} is 1, the computation on \texttt{R} takes longer to complete. This time difference could potentially be exploited to figure out which bits are set to 1 in the key, even though most systems nowadays employ some countermeasures to prevent it (for example, by adopting constant-time algorithms).
 	\paragraph{Trace-driven side channels} In this attack, the adversary monitors the amount of power consumed during the execution. The power trace is a rich source of information, as it can reveal not only when certain operations are performed, but also what data is being used at each stage of the computation. The attacks carried out through this vector are also known as \textit{power analysis} attacks and they proved to be very effective: for example, numerous attacks of this kind have been successfully conducted on AES, the standard algorithm for simmetric encryption, to exfiltrate entire bytes of the symmetric key \cite{Buchanan2017} \cite{Mangard2003} \cite{Mangard2010} \cite{Oswald2004}. The attack is performed collecting a large number of power traces, on which the adversary performs different statistical analyses that can reveal the data dependency between the power consumption and the execution time. This attack style is known as \textit{Differential} Power Analysis (DPA), to distinguish it from \textit{Simple} Power Analysis (SPA), where the attacker needs only one single trace and tries to deduce information about the secret key from it.
@@ -313,18 +312,18 @@ int func(int a){
 	
 	\paragraph{The attack} By poisoning the PHT, the adversary can induce the branch predictor to make a wrong guess about the direction of the conditional branch and perform both reading and writing operations in memory parts they shouldn't have the right to access. To clarify this concept, I propose a couple of examples, taken from \cite{Canella2019}:
 	\begin{lstlisting}
-		if(x < len(array1)) {
-			y = array2[array1[x] * 4096]
-		}
+if(x < len(array1)) {
+	y = array2[array1[x] * 4096]
+}
 	\end{lstlisting}
 	Note that the index we use to access \texttt{array2} is multiplied by 4096. The reason is that the usual cache block size is 64 bytes, so by using indexes in the form \texttt{[k * 4096]} we avoid having two elements used in the program falling into the same cache block.
 	The conditional instruction allows reading a value from \texttt{array2} only if \texttt{x} represents a valid index. However, after repeatedly executing the conditional branch with a value of \texttt{x} that satisfies the guard, the branch predictor will forecast that the expression \texttt{x < len(array1)} evaluates to true and thus will execute the assignment on line 2 in advance. When the adversary supplies an invalid value for \texttt{x}, the CPU will performe an \textit{out-of-bounds memory access}, loading in the cache a value for \texttt{y} that shouldn't be accessed.
 	
 	The same effect can be exploited to perform a write operation on the array, as shown in the following piece of code:
 	\begin{lstlisting}
-		if (x < len(array)) { 
-			array[x] = value; 
-		}
+if (x < len(array)) { 
+	array[x] = value; 
+}
 	\end{lstlisting}  
 	Just as the described above, the attacker can "train" the CPU to guess a certain outcome of the branching instruction and then exploits the misprection caused by the provision of an invalid value of \texttt{x} to write on a protected location.
 	\subsection{Spectre-BTB (Branch Target Buffer)}
@@ -354,8 +353,8 @@ int func(int a){
 	\paragraph{Memory disambiguation} Memory disambiguation\footnote{\url{https://en.wikipedia.org/wiki/Memory_disambiguation}} is a set of techniques used to execute memory access instructions out of order, without affecting the value of the final result. To justify the need of these techinques, I will present two examples, both taken from (Wikipedia):
 	
 	\begin{lstlisting}
-		add $1, $2, $3      # R1 <= R2 + R3
-		add $5, $1, $4      # R5 <= R1 + R4
+add $1, $2, $3      # R1 <= R2 + R3
+add $5, $1, $4      # R5 <= R1 + R4
 	\end{lstlisting}
 	
 	The code above shows two micro-operations that perform simple additions. The result of the second instruction depends on the result of the first one, since the value of register R1 is computed in line 1 and then R1 is used as operand for the addition in line 2. This is a case of \textit{static} dependence, because the sources and destinations of the operations are registers. The processor can easily spot this dependence and decide an order of execution where the first addition is performed before the second one, so that the result is consistent with a sequential execution.
@@ -363,8 +362,8 @@ int func(int a){
 	However, "complications arise when the dependence is not statically determinable". Consider the following code snippet:
 	
 	\begin{lstlisting}
-		store $1, 2($2)      # Mem[R2+2] <= R1
-		load  $3, 4($4)      # R3 <= Mem[R4+4]
+store $1, 2($2)      # Mem[R2+2] <= R1
+load  $3, 4($4)      # R3 <= Mem[R4+4]
 	\end{lstlisting}
 	In this case, the location of the operand is indirectly specified by means of a register, rather than directly defined in the instruction encoding itself. As clearly stated \href{https://en.wikipedia.org/wiki/Memory_disambiguation}{here}, "the microprocessor cannot statically determine, prior to execution, if the memory locations specified in these two instructions are different, or are the same location, because the locations depend on the values in R2 and R4". As a consequence, it is not possible to determine at compile time whether these two instructions can be executed in a different order or not: this is known as \textit{ambiguous} dependence. Detecting and resolving ambiguous dependencies require more sophisticated techniques than static dependency, and this is where the memory disambiguation mechanism comes into play.
 	
@@ -373,12 +372,12 @@ int func(int a){
 	
 	The following example clarifies how to exploit a RAW-hazard to carry out a Spectre attack:
 	\begin{lstlisting}
-		ptr = secret_pointer;		// initial value
-		ptr = public_pointer;		// STORE
-		if(is_public(ptr)){	
-			value = *ptr;			// LOAD
-		}
-		cache = array[value];		// look-up
+ptr = secret_pointer;		// initial value
+ptr = public_pointer;		// STORE
+if(is_public(ptr)){	
+	value = *ptr;			// LOAD
+}
+cache = array[value];		// look-up
 	\end{lstlisting}
 	On line 1, the value of the pointer gets initialised with the location of a secret value, while on line 2 it gets re-assigned to the location of a public value. The \texttt{if} branch checks whether the pointer corresponds to a public address, in which case it allows to read the value stored there. The attack succeeds if the adversary can induce the CPU to delay the commitment of the second store operation, executing the \texttt{if} branch with the initial value of \texttt{ptr}.
 	
@@ -418,7 +417,7 @@ int func(int a){
 	
 	All the background notions about the deep learning techniques used within this tool are discussed in Appendix \ref{appendix:dl}.
 	\subsection{Gadget generation}
-	The authors propose two ways of generating new gadgets: the first one follows a more "traditional" approach, while the second one makes use of recent deep learning techniques.
+	The authors propose two ways of generating new gadgets...
 	\paragraph{Mutational fuzzing}
 	Firstly, the initial set of gadgets is increased by compiling each code snippet with three different compilers (GCC, clang, icc) and different optimisation options (\texttt{-oO}, \texttt{-o2}), obtaining 6 assembly functions for each gadget. Then, on every gadget we apply an algorithm that performs the following steps:
 	\begin{enumerate}
@@ -426,16 +425,36 @@ int func(int a){
 		\item it checks whether the functional properties of the gadgets are preserved,
 		\item it applies a subroutine that checks whether the new gadget still leaks secrets through speculative execution.
 	\end{enumerate}
-	The second step is particularly imporant because it verifies whether the newly inserted instructions improperly modify the flags that are checked in the conditional jumps: if that is the case, the secret may be leaked without even exploiting speculative execution.
+	Step 2) is particularly imporant because it verifies whether the newly inserted instructions improperly modify the flags that are checked in the conditional jumps: if that is the case, the secret may be leaked without even exploiting speculative execution.
 	
-	The new gadgets produced will be used as datasets for the next algorithm.
+	The new gadgets produced with this method are used as dataset for the next algorithm, which makes use of deep learning techniques to obtain the same result.
 	\paragraph{SpectreGAN}
-	The aim of SpectreGAN is to generate assembly functions that are vulnerable to Spectre in a more "intelligent" way, giving up the insertion of random instructions throughout the code. In this way, we are not simply modifying the gadgets with arbitrary changes, but we build a system that learns the features that characterise a piece of code that is vulnerable to Spectre.
+	As the authors specified in their work, "\textit{the purpose of SpectreGAN is to develop an intelligent way of creating assembly functions instead of randomly inserting instructions and operands}" \cite{Tol2021}. In this way, they don't simply modify the gadgets with arbitrary changes, but they build a system that learns the features that characterise a vulnerable piece of code and is able to reproduce them in a brand new code snippet.
 	
-	Both the Generator and the Discriminator are implemented with seq2seq, an architecture commonly use for machine translation tasks (see Appendix \ref{appendix:dl}). As for the generation phase, a gadget is sampled from the dataset, divided in tokens, and masked (which means that some arbitrary tokens are hidden).
+	Both the Generator and the Discriminator are implemented with seq2seq, an architecture commonly used for machine translation tasks (see Appendix \ref{appendix:dl}). As for the \textbf{generation phase}, a gadget is sampled from the dataset, divided in tokens, and "masked", i.e. some arbitrary tokens in the gadget are hidden. The Generator learns the leaking patterns by trying to fill correctly the masked positions. As for the \textbf{discrimination phase}, the Discriminator is fed with 1) the embedding vectors corresponding to the original tokens, and 2) the embedding vectors corresponding to the \textit{masked} tokens ...
 	\subsection{FastSpec}
 	
+	\section{Experimental comparison}
+	(JUST NOTES)\\
+	For this Section, I followed the same approach of \cite{Daniel2021}.\\
+	Research questions:
+	\begin{enumerate}
+		\item What variants are they able to detect?
+		\item Performance-wise, how do these tool compare to each other?
+	\end{enumerate}
+	To answer 1) we compare the performance of the different explorations strategies on a set of real word cryptographic binaries and litmus benchmark.
+	Experiments were performed on a laptop equipped with an Dual-Core Intel Core i5 at 2,9 GHz processor and 16 GB of RAM.
+	
+	\subsection{Benchmarks}
+	First of all, we need to define a starting point for our analysis, namely a set of files that will be used to compare the different tools. I chose the fo
+	
+	\subsection{Performance for Spectre-PHT}
+	Programs used: \texttt{litmus-pht}, \texttt{litmus-pht-masked}, \texttt{tea}, \texttt{donna}, \texttt{secretbox}, \texttt{ssl3-digest}, \texttt{mee-cbc}
+	
 	\appendix
+	\chapter{Complexity theory}\label{appendix:complexity}
+	\section{Complexity classes}
+	\section{Boolean satisfiability problem: SAT}
 	\chapter{Deep Learning}\label{appendix:dl}
 	\section{Generative Adversarial Networks (GANs)}
 	The Generative Adversarial Network \cite{Goodfellow2014} is a learning framework designed for the task of \textit{generative modelling}, an unsupervised learning task that involves the automatic discovering and learning of patterns in data distributions in such a way that the model can generate new examples that plausibly could have been drawn from the original data set. The innovative idea behind GANs lies in the learning strategy, that sees two actors involved:
