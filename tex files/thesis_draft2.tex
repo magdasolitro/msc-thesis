@@ -76,9 +76,6 @@
 	
 	\mainmatter
 	
-	\chapter*{Glossary}
-	This preliminary chapter contains a summary of all the technical terms that are used throughout this thesis, that may be unknown to most readers who are not familiar with the subject. This provides a helpful reference for those who read selected chapters of this work and thus will not encounter all the definitions during the reading.
-	
 	\chapter*{Notation}
 	This chapter constitutes a reference for all the notational conventions and the mathematical symbols used throughout this work, especially in the Static Analysis chapter. 
 	\renewcommand{\arraystretch}{2.0}
@@ -93,10 +90,9 @@
 	\chapter{Static analysis for cybersecurity}\label{chapter:static_analysis}
 	Static analysis is a set of automated techniques used to inspect a program to check whether it satisfies certain properties, without executing it. The origins of static analysis date back to the Seventies and it was initially developed to speed up the compilation process. Nowadays, these techniques are used for a multitude of purposes, such as program verification, synthesis of optimised code, and certification of critical software applications \cite{Rival2020}. 
 	
-	This chapter will provide an insight on the theoretical principles and practical approaches of static analysis, with particular attention to the cybersecurity perspective. Some of the question concerning safety and security that we can tackle with static analysis are, for example: will the software crash under certain circumstances? Will specific inputs give illicit access to information that shouldn't be disclosed? Does the software accomplish \textit{exactly} what it is programmed for or will there be undesired side effects? We can try to give an answer to these questions through intensive testing, but this approach is destined to be a coarse approximation of the correct answer: the domain of possible inputs that need to be examined is often far too broad to be tested in a reasonable amount of time and selecting a small subset of inputs is likely to leave out those few that can cause a malfunctioning, for statistical reasons. Furthermore, if the correct behaviour of a program is crucial for the safety of human lives, it's clear that the analysis of the program cannot be left to inaccurate methods.
-	These are just a couple of reasons that highlight the necessity of techniques that allow us to verify quickly and precisely the properties of a program.
+	This chapter will provide an insight on the theoretical principles and practical approaches of static analysis, with particular attention to the cybersecurity perspective. Some of the question concerning safety and security that we can tackle with static analysis are, for example: will the software crash under certain circumstances? Will specific inputs give illicit access to information that shouldn't be disclosed? Does the software accomplish \textit{exactly} what it is programmed for or will there be undesired side effects? We can try to give an answer to these questions through intensive testing, but this approach is destined to be a coarse approximation of the correct answer: the domain of possible inputs that need to be examined is often far too broad to be tested in a reasonable amount of time and selecting a small subset of inputs is likely to leave out those few that can cause a malfunctioning. In addition to that, nowadays computer programs are behind the correct functioning of safety-critical systems, such as industrial machinery or avionics: in these contexts, where unexpected behaviours can likely cause serious injuries or even death, the analysis of the program cannot be left to inaccurate methods. These are just a couple of reasons that highlight the necessity of techniques that allow us to verify quickly and precisely the properties of a program.
 	
-	The next section provides a theoretical argument that offers a solid base for the research on static analysis.
+	We begin our dive into static analysis by firstly providing the theoretical arguments on which this field is based and then we will move on to describe some modern strategies to carry out the analysis.
 	\section{Theoretical foundations}
 	The goals of static analysis are ambitious, because it aims to provide tools that can deliver the following advantages:
 	\begin{itemize}
@@ -386,21 +382,24 @@ cache = array[value];		// look-up
 	
 	\chapter{Verification tools to detect Spectre}\label{chapter:verification}
 	
-	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the resistance against Spectre-like attacks (be more precise). 
+	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the vulnerability against Spectre-like attacks. 
 	
-	This work focuses on three (four?) different analysis tools:
+	This work focuses on three different analysis tools:
 	\begin{itemize}
+		\begin{comment}
 		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
+		\end{comment}
 		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through taint analysis (see Chapter \ref{chapter:static_analysis});
 		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution (see Chapter \ref{chapter:static_analysis}) to prove a property called speculative noninterference, which encodes security against speculative execution attacks;
 		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
 	\end{itemize}
 	
+	\begin{comment}
 	\section{Jasmin}
 	\textit{Jasmin} \cite{Almeida2017} is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
 	
 	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes it easier to detect Spectre gadgets, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
-	
+	\end{comment}
 	\section{Spectector}
 	
 	\section{oo7}
@@ -435,22 +434,25 @@ cache = array[value];		// look-up
 	Both the Generator and the Discriminator are implemented with seq2seq, an architecture commonly used for machine translation tasks (see Appendix \ref{appendix:dl}). As for the \textbf{generation phase}, a gadget is sampled from the dataset, divided in tokens, and "masked", i.e. some arbitrary tokens in the gadget are hidden. The Generator learns the leaking patterns by trying to fill correctly the masked positions. As for the \textbf{discrimination phase}, the Discriminator is fed with 1) the embedding vectors corresponding to the original tokens, and 2) the embedding vectors corresponding to the \textit{masked} tokens ...
 	\subsection{FastSpec}
 	
-	\section{Experimental comparison}
-	(JUST NOTES)\\
-	For this Section, I followed the same approach of \cite{Daniel2021}.\\
-	Research questions:
+	\section{Testing the gadgets}
+	From \cite{Tol2021} we summarise some key facts about the new gadgets:
+	\begin{itemize}
+		\item the gadgets generated through \textit{mutational fuzzing} have been tested by running a succesful Spectre attack on them, thus they are guaranteed to be vulnerable;
+		\item the gadgets generated using \textit{SpectreGAN} are evaluated by submitting them to state-of-the-art tools, Spectector and oo7, and verifying whether the analysis successfully detects the Spectre vulnerability or not.
+	\end{itemize}
+	Citing \cite{Tol2021}, about the tests conducted on oo7:
+	\begin{quote}
+		\textit{[...] we have selected 100,000 samples from each gadget example uniformly random due to the immense time consumption of oo7 (150 hours for 100K gadgets), which achieves a 94\% detection rate.}
+	\end{quote}
+	and about the tests conducted using Spectector:
+	\begin{quote}
+		\textit{[...] 1\% of the gadgets are not detected successfully.}
+	\end{quote}
+	In light of this, the goals of this work is to answer the following questions: 
 	\begin{enumerate}
-		\item What variants are they able to detect?
-		\item Performance-wise, how do these tool compare to each other?
+		\item What are the discrepancies between the oo7 and Spectre? More precisely, on which gadgets do they disagree, and why? 
+		\item Do the gadgests generated by SpectreGAN and not recognised as vulnerable \textit{actually} unprotected with respect to Spectre?
 	\end{enumerate}
-	To answer 1) we compare the performance of the different explorations strategies on a set of real word cryptographic binaries and litmus benchmark.
-	Experiments were performed on a laptop equipped with an Dual-Core Intel Core i5 at 2,9 GHz processor and 16 GB of RAM.
-	
-	\subsection{Benchmarks}
-	First of all, we need to define a starting point for our analysis, namely a set of files that will be used to compare the different tools. I chose the fo
-	
-	\subsection{Performance for Spectre-PHT}
-	Programs used: \texttt{litmus-pht}, \texttt{litmus-pht-masked}, \texttt{tea}, \texttt{donna}, \texttt{secretbox}, \texttt{ssl3-digest}, \texttt{mee-cbc}
 	
 	\appendix
 	\chapter{Complexity theory}\label{appendix:complexity}
