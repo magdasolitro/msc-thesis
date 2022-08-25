@@ -207,7 +207,7 @@ y = x;
 	\end{defn}
 	The CDG is used by the analyser to keep track of how the tainted data affects the other variables in the program. However, as the complexity of the program increases, the size of these graphs grows exponentially and can become infeasible to analyse. This issue is also encountered in another popular approach, symbolic execution, which is discussed in the below. 
 	\subsection{Symbolic execution}
-	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution \cite{Baldoni2018}: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
+	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution \cite{Baldoni2018} \cite{King76}: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
 	
 	During the symbolic execution of a program, the analysis engine keeps track the following information:
 	\begin{itemize}
@@ -384,75 +384,65 @@ cache = array[value];		// look-up
 	
 	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the vulnerability against Spectre-like attacks. 
 	
-	This work focuses on three different analysis tools:
-	\begin{itemize}
-		\begin{comment}
-		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
-		\end{comment}
-		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through taint analysis (see Chapter \ref{chapter:static_analysis});
-		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution (see Chapter \ref{chapter:static_analysis}) to prove a property called speculative noninterference, which encodes security against speculative execution attacks;
-		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
-	\end{itemize}
+	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework named SpectreGAN. On the other hand we have KLEESpectre \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of the work consists in testing the quality of the gadgets generated with SpectreGAN by submitting them to KLEESpectre. We want to tackle two main questions: 
+	\begin{enumerate}
+		\item Are there gadgets that go undetected on KLEESpectre? If so, what are the reasons that hinder the detection?
+		\item Are the undetected gadgets actually vulnerable to Spectre or are they faulty?
+	\end{enumerate}
+	The code snippets produced by SpectreGAN were already tested with two state-of-the-art tools, oo7 \cite{Wang2019} and Spectector \cite{Guarnieri2018}, with excellent results: oo7 succeeded in 94\% of the cases, while Spectector went as far as 99\% \cite{Tol2021}. This work is thus motivated not really by the need of further quality assessment, but rather by the curiosity of understanding how different detection strategies differ from each other, what are their weak points, and in what circumstances they perform better.
+	
+	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on SpectreGAN and KLEESpectre, where we describe their main features and working strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the gadgets generated with SpectreGAN with KLEESpectre. 
 	
 	\begin{comment}
+	\begin{itemize}
+		
+		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
+		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through taint analysis (see Chapter \ref{chapter:static_analysis});
+		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution (see Chapter \ref{chapter:static_analysis}) to prove a property called speculative noninterference, which encodes security against speculative execution attacks;
+		
+		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
+	\end{itemize}
+
 	\section{Jasmin}
 	\textit{Jasmin} \cite{Almeida2017} is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
 	
 	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes it easier to detect Spectre gadgets, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
-	\end{comment}
+	
 	\section{Spectector}
 	
 	\section{oo7}
+	\end{comment}
 	
-	\section{FastSpec}
-	\textit{FastSpec} \cite{Tol2021} is a recent tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods (such as ...). The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 15. Even though it is conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
+	\section{SpectreGAN}\label{sec:fastspec}
+	SpectreGAN is a Generative Adversarial Network that was presented along with FastSpec \cite{Tol2021}, a tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods. The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 17 (15 by Kocher \cite{Kocher2018} and 2 modified example introduced by Spectector). Despite being conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
 	
-	The paper by Tol et al. targets this problem through the following steps:
+	The authors of FastSpec target this problem through the following steps:
 	\begin{itemize}
-		\item They extend the current set of 15 gadgets to 1 million by applying a technique called \textit{mutational fuzzing}, creating an appropriate dataset for the deep learning algorithm.
-		\item They describe a specific implementation of a GAN, named \textit{SpectreGAN}, that is trained on the dataset mentioned in the preovious point to learn the distribution of existing Spectre gadgets.
+		\item They extend the current set of 15 gadgets to 1 million by applying a technique called \textit{mutational fuzzing}, creating an appropriate dataset for the deep learning algorithm;
+		\item They describe a specific implementation of a GAN, named \textit{SpectreGAN}, that is trained on the dataset mentioned in the preovious point to learn the distribution of existing Spectre gadgets;
 		\item They introduce \textit{FastSpec}, a tool based on supervised neural network embeddings, to identify potential gadgets faster that rule-based methods.
 	\end{itemize}
-	The rest of this section is organised in two parts: the first one describes how the authors generated the dataset of 1 million gadgets, while the second one deals with the detection of Spectre-like vulnerabilities through FastSpec. 
-	
-	All the background notions about the deep learning techniques used within this tool are discussed in Appendix \ref{appendix:dl}.
-	\subsection{Gadget generation}
-	The authors propose two ways of generating new gadgets...
+	The rest of the section is focused on the first two points, namely in the parts that deal with the generation of new gadgets, as FastSpec is out of our scope of interest. All the background notions about the deep learning techniques used within this tool are discussed in Appendix \ref{appendix:dl}.
+
+	The authors propose two ways of producing new gadgets starting from the initial set of 17: the first one leverages on random insertion of instructions, and is used to create a large dataset of code snippets. The second one uses the previously generated dataset to train a Generative Adversarial Network: the goal is to learn the leakage distribution of Spectre vulnerabilities, to be able to "intelligently" produce vulnerable code.
 	\paragraph{Mutational fuzzing}
-	Firstly, the initial set of gadgets is increased by compiling each code snippet with three different compilers (GCC, clang, icc) and different optimisation options (\texttt{-oO}, \texttt{-o2}), obtaining 6 assembly functions for each gadget. Then, on every gadget we apply an algorithm that performs the following steps:
+	Firstly, the initial set of gadgets is increased by compiling each code snippet with three different compilers and different optimisation options, obtaining 6 assembly functions for each gadget. Then, the authors describe an algorithm that performs the following steps on each gadget:
 	\begin{enumerate}
-		\item it inserts random assembly instructions in random locations of the gadget,
-		\item it checks whether the functional properties of the gadgets are preserved,
-		\item it applies a subroutine that checks whether the new gadget still leaks secrets through speculative execution.
+		\item It inserts random assembly instructions in random locations of the gadget,
+		\item It checks whether the functional properties of the gadgets are preserved,
+		\item It checks whether the new gadget still leaks secrets through speculative execution.
 	\end{enumerate}
 	Step 2) is particularly imporant because it verifies whether the newly inserted instructions improperly modify the flags that are checked in the conditional jumps: if that is the case, the secret may be leaked without even exploiting speculative execution.
-	
-	The new gadgets produced with this method are used as dataset for the next algorithm, which makes use of deep learning techniques to obtain the same result.
 	\paragraph{SpectreGAN}
-	As the authors specified in their work, "\textit{the purpose of SpectreGAN is to develop an intelligent way of creating assembly functions instead of randomly inserting instructions and operands}" \cite{Tol2021}. In this way, they don't simply modify the gadgets with arbitrary changes, but they build a system that learns the features that characterise a vulnerable piece of code and is able to reproduce them in a brand new code snippet.
+	As the authors clarify in their work, "\textit{the purpose of SpectreGAN is to develop an intelligent way of creating assembly functions instead of randomly inserting instructions and operands}" \cite{Tol2021}. In this way, they don't simply modify the gadgets with arbitrary changes, but they build a system that learns the features that characterise a vulnerable piece of code and is able to reproduce them in a brand new code snippet.
 	
 	Both the Generator and the Discriminator are implemented with seq2seq, an architecture commonly used for machine translation tasks (see Appendix \ref{appendix:dl}). As for the \textbf{generation phase}, a gadget is sampled from the dataset, divided in tokens, and "masked", i.e. some arbitrary tokens in the gadget are hidden. The Generator learns the leaking patterns by trying to fill correctly the masked positions. As for the \textbf{discrimination phase}, the Discriminator is fed with 1) the embedding vectors corresponding to the original tokens, and 2) the embedding vectors corresponding to the \textit{masked} tokens ...
-	\subsection{FastSpec}
 	
-	\section{Testing the gadgets}
-	From \cite{Tol2021} we summarise some key facts about the new gadgets:
-	\begin{itemize}
-		\item the gadgets generated through \textit{mutational fuzzing} have been tested by running a succesful Spectre attack on them, thus they are guaranteed to be vulnerable;
-		\item the gadgets generated using \textit{SpectreGAN} are evaluated by submitting them to state-of-the-art tools, Spectector and oo7, and verifying whether the analysis successfully detects the Spectre vulnerability or not.
-	\end{itemize}
-	Citing \cite{Tol2021}, about the tests conducted on oo7:
-	\begin{quote}
-		\textit{[...] we have selected 100,000 samples from each gadget example uniformly random due to the immense time consumption of oo7 (150 hours for 100K gadgets), which achieves a 94\% detection rate.}
-	\end{quote}
-	and about the tests conducted using Spectector:
-	\begin{quote}
-		\textit{[...] 1\% of the gadgets are not detected successfully.}
-	\end{quote}
-	In light of this, the goals of this work is to answer the following questions: 
-	\begin{enumerate}
-		\item What are the discrepancies between the oo7 and Spectre? More precisely, on which gadgets do they disagree, and why? 
-		\item Do the gadgests generated by SpectreGAN and not recognised as vulnerable \textit{actually} unprotected with respect to Spectre?
-	\end{enumerate}
+	
+	\section{KLEESpectre}\label{sec:kleespectre}
+	KLEESpectre \cite{Wang2019} was introduced just one year after the first variants of Spectre were disclosed. It's a tool based on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis.This tool is based on the symbolic execution engine KLEE \cite{Cadar2008}, which was modified it into KLEESpectre in order to make it able to model speculative execution: symbolic execution, in its standard version, aims at modelling the different paths that a program can take by abstracting the unknown inputs with symbolic values, but doing so, the reasoning is conducted only at program level, ignoring speculative or out-of-order execution.
+	
+	\section{Testing the gadgets}\label{sec:testing}
 	
 	\appendix
 	\chapter{Complexity theory}\label{appendix:complexity}
