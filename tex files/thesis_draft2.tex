@@ -9,13 +9,20 @@
 \usepackage{color}
 \usepackage{listings}
 \usepackage{caption}
+\usepackage{enumitem}
 \usepackage[toc,page]{appendix}
 
 \definecolor{green}{RGB}{60,179,113}
 \definecolor{violet}{RGB}{153,50,204}
 \definecolor{blue}{RGB}{65,105,225}
 \definecolor{gray}{RGB}{128,128,128}
-\definecolor{red}{RGB}{255, 100, 100}
+\definecolor{red}{RGB}{255,100,100}
+\definecolor{lightgreen}{RGB}{141,213,161}
+\definecolor{lightpurple}{RGB}{215,189,226}
+\definecolor{lightgreen}{RGB}{171,235,198}
+\definecolor{yellow}{RGB}{249,231,159}
+\definecolor{pink}{RGB}{253,175,172}
+\definecolor{lightblue}{RGB}{174,214,241}
 
 % set up the colors for different kind of references
 \hypersetup{
@@ -152,7 +159,7 @@
 	Soundness and completeness are two essential aspect of a correct analysis, but an inherent limit of computability prevents us from having both. This limit comes with Gödel's Incompleteness Theorems, which essentially show that there is an intrinsic gap in mathematics between \textit{proof} and \textit{truth}. These theorems are extremely complex and profound, and thus we will not dive into the details, but the interested readers can find out more about the topic in \cite{Odifreddi1989}, \cite{Rogers1987}, \cite{Hinman2007}.
 	\section{Practical approaches and related challenges}
 	This section discusses the general ideas behind some of the most effective approaches used by the tools discussed in Chapter \ref{chapter:verification}. The description should be considered as a high-level introduction whose aim is to give an idea of the mechanisms leveraged by these tools.
-	\subsection{Taint analysis}
+	\subsection{Taint analysis}\label{sec:taint}
 	Taint analysis is a technique that involves labelling each variable supplied to the program by an untrusted source as \textit{tainted}, assuming that the untrusted source could be an adversary trying to attack the system.
 	Then, every variable in the program whose value is dependent from tainted variables is also marked as tainted. In this way, we can keep track of the propagation of tainted data during the program execution and detect when this data is used in dangerous ways. Taint analysis can be used to identify parts of code vulnerable to Spectre: for instance, in a Spectre-PHT attack, certain values can be supplied repeatedly to a conditional branch to induce a misprediction. The following example shows a Spectre-PHT gadget where the tainted variables are marked in red:
 	
@@ -206,7 +213,7 @@ y = x;
 		A \textit{control dependency graph (CDG)} \cite{Krinke2007} is a directed graph $G=(V,E)$ in which nodes represent the program's statements or expressions, while an edge $x\rightarrow y$ expresses the fact that the statement $x$ assigns a variable which is used in $y$, which means that the mere execution of $y$ depends on the value of the expression $x$. 
 	\end{defn}
 	The CDG is used by the analyser to keep track of how the tainted data affects the other variables in the program. However, as the complexity of the program increases, the size of these graphs grows exponentially and can become infeasible to analyse. This issue is also encountered in another popular approach, symbolic execution, which is discussed in the below. 
-	\subsection{Symbolic execution}
+	\subsection{Symbolic execution}\label{sec:symbolic-exec}
 	One way to test the behaviour of a program is to provide it with different, random inputs and observe the result of every execution. However, this approach presents a glaring limit: the domain of all the possible inputs can be extremely wide, if not infinite, which makes it infeasible to try all of them. One way around this obstacle is to use symbolic execution \cite{Baldoni2018} \cite{King76}: instead of using fully specified input values, we simultaneously explore multiple paths that a program can take under different inputs. This is possible by representing those inputs that cannot be determined statically under a symbol, namely an abstract value. Such inputs could be, for example, paramenters that must be provided by the user at run time.
 	
 	During the symbolic execution of a program, the analysis engine keeps track the following information:
@@ -440,10 +447,56 @@ cache = array[value];		// look-up
 	
 	
 	\section{KLEESpectre}\label{sec:kleespectre}
-	KLEESpectre \cite{Wang2019} was introduced just one year after the first variants of Spectre were disclosed. It's a tool based on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis.This tool is based on the symbolic execution engine KLEE \cite{Cadar2008}, which was modified it into KLEESpectre in order to make it able to model speculative execution: symbolic execution, in its standard version, aims at modelling the different paths that a program can take by abstracting the unknown inputs with symbolic values, but doing so, the reasoning is conducted only at program level, ignoring speculative or out-of-order execution.
+	KLEESpectre \cite{Wang2019} leverages on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis of a program. As the name suggests, this tool was obtained by modifying the symbolic execution engine KLEE \cite{Cadar2008} to model the branch speculation that are the root of Spectre vulnerabilities. 
+	\paragraph{Speculative symbolic execution} As already discussed in Section \ref{sec:symbolic-exec}, standard symbolic execution analyses code by representing the different paths that the program can take and abstracting the unknown inputs with symbolic values. For example, consider the following piece of code shown in Figure ... A standard symbolic execution engine like KLEE would explore the paths shown in Figure \ref{fig:standars_symb_exec} : since \texttt{x} is a user-supplied value, and therefore cannot be determined statically, the KLEE would model the two possible outcome for the first conditional statement, on line 5: either the branch condition on \texttt{x} is true ($p_{T1}$) or it is false ($p_{F1}$). The same reasoning is made for the second conditional statement, on line 8.
+	\begin{lstlisting}[escapechar=!]
+uint32_t SIZE = 16; 
+uint8_t array1[16], array2[256*64], array3[16];
+uint8_t foo(uint32_t x) { 
+	uint8_t temp = 0; 
+	!\colorbox{lightpurple}{if (x < SIZE)}! {		  // branch b1
+		!\colorbox{lightblue}{temp = array1[x];}!
+		!\colorbox{lightblue}{temp |= array2[temp];}!
+		!\colorbox{lightgreen}{if (x <= 8)}! {		// branch b2
+			!\colorbox{yellow}{temp |= array2[8];}!
+		}	
+	}
+	!\colorbox{pink}{temp |= array3[8];}!
+	!\colorbox{pink}{return temp;}!
+}
+	\end{lstlisting}
+
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[scale=0.3]{imgs/symb_exec}
+		\caption{Standard symbolic execution of the program.}
+		\label{fig:standars_symb_exec}
+	\end{figure}
+	KLEESpectre, instead, makes a step further, considering four different scenarios for each branching instruction. For instance, the execution of the first branch is modelled as follows: 
+	\begin{enumerate}
+		\item $p_{T1}$: \texttt{x < SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{green}{correctly predicted}. In this case, the symbolic execution will fork a new state with constraint \texttt{x < SIZE} and proceeds by executing the code fragment highlighted in \colorbox{lightblue}{blue}.
+		\item $p_{F1}$: \texttt{x >= SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{green}{correctly predicted}. In this case, the symbolic execution will fork a new state with constraint \texttt{x >= SIZE} and proceeds by executing the code fragment highlighted in \colorbox{pink}{pink}.
+	\end{enumerate}
+	These are the two cases that are also considered by a standard symbolic execution engine, to which two more are added:
+	\begin{enumerate}[resume]
+		\item $sp_{T1}$: \texttt{x >= SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{red}{mispredicted}. In this case, KLEESpectre forks a new state with constraint \texttt{x >= SIZE}, but proceeds by executing the code fragment highlighted in \colorbox{lightblue}{blue}.
+		\item $sp_{F1}$: \texttt{x < SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{red}{mispredicted}. KLEESpectre forks a new state with constraint \texttt{x < SIZE}, but proceeds by executing the code fragment highlighted in \colorbox{pink}{pink}.
+	\end{enumerate}
+	The decision tree produced by KLEESpectre as depicted in Figure \ref{fig:spec_symb_exec}
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[scale=0.3]{imgs/spec_symb_exec}
+		\caption{Speculative symbolic execution of the program.}
+		\label{fig:spec_symb_exec}
+	\end{figure}
+	
+	The critical scenario, namely the one that poses a security threat, is the third one: the processor executes the instructions contained in the scope of the branching statement, even though the condition is not satisfied. 
+	
+	KLEESpectre is also able to handle the problem of state space explosion, by discarding any path that do not pose any risk of data leakage. In the example shown in Figure \ref{fig:spec_symb_exec} the symbolic states $sp_{T3}$,$sp_{F3}$, $sp_{T4}$ and $sp_{F4}$ are all discarded once KLEESpectre reaches the limit of speculative execution window (SEW, see Section \ref{sec:taint}). 
+	\paragraph{Cache modelling} Speculative symbolic execution is further extended with cache modelling: KLEESpectre captures the behaviour of the cache by distinguishing between accesses to \textit{concrete} or \textit{symbolic} memory. While the former represents the access to a memory address that is statically known, the latter stands for the access to an address that can be determined only at run time.
 	
 	\section{Testing the gadgets}\label{sec:testing}
-	
 	\appendix
 	\chapter{Complexity theory}\label{appendix:complexity}
 	\section{Complexity classes}
