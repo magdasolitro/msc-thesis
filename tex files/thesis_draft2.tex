@@ -391,35 +391,20 @@ cache = array[value];		// look-up
 	
 	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the vulnerability against Spectre-like attacks. 
 	
-	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework named SpectreGAN. On the other hand we have KLEESpectre \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of the work consists in testing the quality of the gadgets generated with SpectreGAN by submitting them to KLEESpectre. We want to tackle two main questions: 
+	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework named SpectreGAN. On the other hand we have KLEESpectre \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of this work consists in testing OpenSSL's cryptographic hash functions, including MD4, MD5, SHA-1, and SHA-2, with these tools, trying to answer the following questions: 
 	\begin{enumerate}
-		\item Are there gadgets that go undetected on KLEESpectre? If so, what are the reasons that hinder the detection?
-		\item Are the undetected gadgets actually vulnerable to Spectre or are they faulty?
+		\item Do FastSpec and KLEESpectre detect any Spectre vulnerability? If so, what variant do they detect?
+		\item Do FastSpec and KLEESpectre provide the same results?
+		\item Comparing the results obtained on hash functions implemented in OpenSSL v1.0.0 (last revised in 2015, before the discovering of Spectre) and those implemented in OpenSSL v3.0.0 (the latest version), are there any differences? 
 	\end{enumerate}
-	The code snippets produced by SpectreGAN were already tested with two state-of-the-art tools, oo7 \cite{Wang2019} and Spectector \cite{Guarnieri2018}, with excellent results: oo7 succeeded in 94\% of the cases, while Spectector went as far as 99\% \cite{Tol2021}. This work is thus motivated not really by the need of further quality assessment, but rather by the curiosity of understanding how different detection strategies differ from each other, what are their weak points, and in what circumstances they perform better.
+	As specified in the paper, the authors already FastSpec to test other cryptographic algorithms in OpenSSL v3.0.0, such as RSA, EDCSA and DSA.
 	
-	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on SpectreGAN and KLEESpectre, where we describe their main features and working strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the gadgets generated with SpectreGAN with KLEESpectre. 
+	The rest of the chapter is organised as follows: Section \ref{sec:open-ssl} offers a brief description of OpenSSL, while Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on SpectreGAN and KLEESpectre, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and KLEESpectre. 
 	
-	\begin{comment}
-	\begin{itemize}
-		
-		\item \textbf{Jasmin}\cite{Almeida2017}, a framework for developing high speed and high-assurance cryptographic software;
-		\item \textbf{oo7} \cite{Wang2019} is an analysis tool that detects Spectre gadgets through taint analysis (see Chapter \ref{chapter:static_analysis});
-		\item \textbf{Spectector} \cite{Guarnieri2018}, an algorithm that uses symbolic execution (see Chapter \ref{chapter:static_analysis}) to prove a property called speculative noninterference, which encodes security against speculative execution attacks;
-		
-		\item \textbf{FastSpec} \cite{Tol2021}, a detection tool that employs Generative Adversarial Networks (GANs) to  automate the generation and detection of Spectre gadgets.
-	\end{itemize}
-
-	\section{Jasmin}
-	\textit{Jasmin} \cite{Almeida2017} is a language that allows writing cryptographic software that is not only efficient and functionally correct but also easy to formally verify. In general, cryptographic code is usually written in Assembly or some similar low-level languages (e.g. \textsf{qhasm}), to satisfy efficiency requirements. However, formal verification of such programs is extremely challenging due to complex side effects, unstructured control flow, and flat structure. Side-effects are unpredicted and often undesired events that happen as a consequence of certain operations. While high-level languages can rely on sophisticated methods to avoid them, languages like Assembly are often more prone to have them. Moreover, low-level languages usually don't provide explicit control flow structures such as if then else or loops. These are precisely the type of high-level structures that may introduce side-channel vulnerabilities, thus their absence can make it difficult to detect such threats. 
+	\section{OpenSSL}\label{sec:open-ssl}
+	OpenSSL\footnote{Official website: \url{https://www.openssl.org/}} is a popular software library used to ensure secure communication over the network. The core library is written in C and implements the basic cryptographic functions currently in use, as well as an open-source implementation of the SSL and TLS protocols. In this work, we will test all of the hash functions supported by OpenSSL, namely: MD5, MD4, MD2, SHA-1, SHA-2, SHA-3, RIPEMD-160, MDC-2, GOST R 34.11-94, BLAKE2, Whirlpool, SM3.
 	
-	To get around these issues, Jasmin maintains a low-level fashion but allows the usage of some high-level features, including function calls and structured control flow. This makes it easier to detect Spectre gadgets, without affecting the performance. Besides verifiability, Jasmin code is also predictable: while the programmer can use machine instructions from different micro-architectures, they can precisely anticipate what the assembly code will look like. Jasmin code is then compiled to Assembly in such a way that the functional and safety properties are maintained unaltered. 
-	
-	\section{Spectector}
-	
-	\section{oo7}
-	\end{comment}
-	
+	I chose to test this library not only because of its popularity, but also because, as already mentioned, it's implemented in C, which allows us to directly test the code with KLEESpectre.
 	\section{SpectreGAN}\label{sec:fastspec}
 	SpectreGAN is a Generative Adversarial Network that was presented along with FastSpec \cite{Tol2021}, a tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods. The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 17 (15 by Kocher \cite{Kocher2018} and 2 modified example introduced by Spectector). Despite being conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
 	
@@ -496,7 +481,7 @@ uint8_t foo(uint32_t x) {
 	KLEESpectre is also able to handle the problem of state space explosion, by discarding any path that do not pose any risk of data leakage. In the example shown in Figure \ref{fig:spec_symb_exec} the symbolic states $sp_{T3}$,$sp_{F3}$, $sp_{T4}$ and $sp_{F4}$ are all discarded once KLEESpectre reaches the limit of speculative execution window (SEW, see Section \ref{sec:taint}). 
 	\paragraph{Cache modelling} Speculative symbolic execution is further extended with cache modelling: KLEESpectre captures the behaviour of the cache by distinguishing between accesses to \textit{concrete} or \textit{symbolic} memory. While the former represents the access to a memory address that is statically known, the latter stands for the access to an address that can be determined only at run time.
 	
-	\section{Testing the gadgets}\label{sec:testing}
+	\section{Testing hash functions}\label{sec:testing}
 	\appendix
 	\chapter{Complexity theory}\label{appendix:complexity}
 	\section{Complexity classes}

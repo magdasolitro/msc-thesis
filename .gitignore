@@ -11,3 +11,5 @@ tex files/thesis_draft2.toc
 .DS_Store
 tex files/.DS_Store
 tex files/texput.log
+hash_func/
+
