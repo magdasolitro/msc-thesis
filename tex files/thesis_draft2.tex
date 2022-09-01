@@ -50,6 +50,8 @@
 	tabsize=4
 }
 
+\newcommand\defeq{\stackrel{\mathclap{\normalfont\mbox{\tiny def}}}{=}}
+
 \newcommand{\st}{\hspace{2px}.\hspace{2px}}
 
 \theoremstyle{definition}
@@ -534,7 +536,64 @@ uint8_t foo(uint32_t x) {
 	The last equation makes it clear why this style of training is called \textit{adversarial}: while the Generator tries to minimise a function, the Discriminator tries to maximise it, thus the two networks have opposite goals. (maybe explain better..?)
 	
 	\section{Natural Language Processing (NLP)}
-	\chapter{AES: Advanced Encryption Standard}\label{appendix:aes}
+	\chapter{Block ciphers and AES}\label{appendix:aes}
+	AES \cite{Katz2007} \cite{AES-FIPS} is a block cipher that was born in 1998 as replacement of the obsolete DES, on request of the U.S. government. At first, its use was limited to military purposes, but nowadays it’s one of the most common block ciphers in use, deeply embedded in various applications. In particular, AES is a subset of the Rijndael ciphers, a family of ciphers with different key and block sizes.
+	
+	This appendix begins with a brief introduction to block ciphers and modes of operations, before diving deeper into the details of AES.
+	
+	\section{Block ciphers}
+	A block cipher is a deterministic algorithm $F$ that operates on data units of fixed length, called \textit{blocks}. $F$ accepts in input a data block of size $n$, and performs a transformation using a key $K$, producing in output a block of same size as the input. More formally, $F$ is defined as follows:
+	\[
+		F: \{0,1\}^k \times \{0,1\}^n \rightarrow \{0,1\}^n
+	\]
+	where $k$ represents the key length and $n$ the size of the block. The definition given above means that a ciphertext $C$ is obtained from a key $K$ and a plaintext $P$ as:
+	\[
+		F(K,P) = C
+	\]
+	Since the key remains fixed for a certain number of encryptions, before being refreshed, we can parametrise $F$ on $K$, defining $F_K(P) \defeq F(K,P)$.
+	
+	If $F$ represents the encryption algorithm, then the decryption algorithm is obtained simply by computing $F^{-1}$, thus:
+	\[
+		F^{-1}(K,C) = P
+	\]
+
+	\section{Modes of operation}
+	There is a clear limitation of block ciphers: they can only encrypt data of fixed size. While the case in which $|P| < n$ can be easily circumvented through padding, if $|P| > n$ we would be forced to discard a part of the message. \textit{Modes of operation} address this problem, providing a way to securely and efficiently encrypt long messages using block ciphers. In simple terms, a mode of operation defines how to concatenate the use of a block cipher in such a way that each cipher encrypts a specific part of the message. In general, if the message $P$ has size $m > n$, the $P$ is split in $\ell = \frac{m}{n}$ blocks, $P_1$, $P_2$, ... , $P_{\ell}$, and the whole ciphertext is obtained as:
+	\[
+	C = \langle F(K, P_1), F(K, P_2), ..., F(K, P_{\ell})\rangle
+	\]
+	where the operator $\langle \cdot , ..., \cdot \rangle$ represents a a generic combination. In the rest of the section, we will describe some of the most popular modes of operation.
+	\subsection{Electronic Code Book (ECB) mode}
+	This is the simplest mode of operation: it consists in performing the encryption of the data blocks separately, and then concatenating the results, as shown in Figure \ref{fig:ecb}.
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[scale=0.35]{imgs/ecb}
+		\caption{Electronic Code Book (ECB) mode (source: \cite{Katz2007})}
+		\label{fig:ecb}
+	\end{figure}
+	Therefore, the whole ciphertext is computed as
+	\[
+	C = F(K, P_1)\hspace{5px}||\hspace{5px}F(K, P_2)\hspace{5px}||\hspace{5px}... \hspace{5px}||\hspace{5px}F(K, P_{\ell})
+	\]
+	where the operator $||$ represents a concatenation.
+	
+	This mode of operation is not used in real-world applications: since it's deterministic (i.e. by encrypting the same plaintext multiple times, we always obtain the same ciphertext), it can be proved that it doesn't satisfy the minimum standards of security. 
+	\subsection{Cipher Block Chaining (CBC) mode}
+	\subsection{Output Feedback (OFB) mode}
+	\subsection{Counter (CTR) mode}
+	\section{AES: Advanced Encryption Standard}
+	The AES cipher has a 128-bit block length and can use 128-, 192-, or 256-bit keys. In contrast with DES, which uses a Feistel structure, AES is essentially a so-called Substitution-Permutation network.
+	AES’s algorithm consist of five main steps:
+	\begin{enumerate}
+		\item \textsf{KeyExpansion}: a fresh 128-bit key is derived at each round, using the AES key schedule.
+		\item \textsf{AddRoundKey}: in every round of AES, a 128-bit sub-key is derived from the master key, and is interpreted as a 4-by-4 array of bytes. The state array is updated by XORing it with this sub-key.
+		\item \textsf{SubBytes}: ...
+		\item \textsf{ShiftRows}: ...
+		\item \textsf{MixColumns}: ...
+	\end{enumerate}
+	Added to
+	In the final round, MixColumns is replaced by AddRoundKey.
+	Usually, the number of rounds goes from 10 to 14. 
 	
 	\bibliography{thesis_ref}{}
 	\bibliographystyle{acm}
