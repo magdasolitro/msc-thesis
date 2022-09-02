@@ -10,6 +10,7 @@
 \usepackage{listings}
 \usepackage{caption}
 \usepackage{enumitem}
+\usepackage{graphicx,caption}
 \usepackage[toc,page]{appendix}
 
 \definecolor{green}{RGB}{60,179,113}
@@ -537,51 +538,91 @@ uint8_t foo(uint32_t x) {
 	
 	\section{Natural Language Processing (NLP)}
 	\chapter{Block ciphers and AES}\label{appendix:aes}
-	AES \cite{Katz2007} \cite{AES-FIPS} is a block cipher that was born in 1998 as replacement of the obsolete DES, on request of the U.S. government. At first, its use was limited to military purposes, but nowadays it’s one of the most common block ciphers in use, deeply embedded in various applications. In particular, AES is a subset of the Rijndael ciphers, a family of ciphers with different key and block sizes.
-	
 	This appendix begins with a brief introduction to block ciphers and modes of operations, before diving deeper into the details of AES.
 	
 	\section{Block ciphers}
-	A block cipher is a deterministic algorithm $F$ that operates on data units of fixed length, called \textit{blocks}. $F$ accepts in input a data block of size $n$, and performs a transformation using a key $K$, producing in output a block of same size as the input. More formally, $F$ is defined as follows:
+	A block cipher is a deterministic algorithm $F$ that operates on data units of fixed length, called \textit{blocks}. $F$ accepts in input a data block of size $n$, and performs a transformation using a key $k$, producing in output a block of same size as the input. More formally, $F$ is defined as follows:
 	\[
-		F: \{0,1\}^k \times \{0,1\}^n \rightarrow \{0,1\}^n
+		F: \{0,1\}^{|k|} \times \{0,1\}^n \rightarrow \{0,1\}^n
 	\]
-	where $k$ represents the key length and $n$ the size of the block. The definition given above means that a ciphertext $C$ is obtained from a key $K$ and a plaintext $P$ as:
+	where $|k|$ represents the key length and $n$ the size of the block. The definition given above means that a ciphertext $c$ is obtained from a key $k$ and a plaintext $p$ as:
 	\[
-		F(K,P) = C
+		F(k,p) = c
 	\]
-	Since the key remains fixed for a certain number of encryptions, before being refreshed, we can parametrise $F$ on $K$, defining $F_K(P) \defeq F(K,P)$.
+	Since the key remains fixed for a certain number of encryptions, before being refreshed, we can parametrise $F$ on $k$, defining $F_k(p) \defeq F(k,p)$.
 	
 	If $F$ represents the encryption algorithm, then the decryption algorithm is obtained simply by computing $F^{-1}$, thus:
 	\[
-		F^{-1}(K,C) = P
+		F^{-1}(k,c) = p
 	\]
 
 	\section{Modes of operation}
-	There is a clear limitation of block ciphers: they can only encrypt data of fixed size. While the case in which $|P| < n$ can be easily circumvented through padding, if $|P| > n$ we would be forced to discard a part of the message. \textit{Modes of operation} address this problem, providing a way to securely and efficiently encrypt long messages using block ciphers. In simple terms, a mode of operation defines how to concatenate the use of a block cipher in such a way that each cipher encrypts a specific part of the message. In general, if the message $P$ has size $m > n$, the $P$ is split in $\ell = \frac{m}{n}$ blocks, $P_1$, $P_2$, ... , $P_{\ell}$, and the whole ciphertext is obtained as:
+	There is a clear limitation of block ciphers: they can only encrypt data of fixed size. While the case in which $|p| < n$ can be easily circumvented through padding, if $|p| > n$ we would be forced to discard a part of the message. \textit{Modes of operation} address this problem, providing a way to securely and efficiently encrypt long messages using block ciphers. In simple terms, a mode of operation defines how to concatenate the use of a block cipher in such a way that each cipher encrypts a specific part of the message. In general, if the message $p$ has size $m > n$, the $P$ is split in $\ell = \frac{m}{n}$ blocks, $p_1$, $p_2$, ... , $p_{\ell}$, and the whole ciphertext is obtained as:
 	\[
-	C = \langle F(K, P_1), F(K, P_2), ..., F(K, P_{\ell})\rangle
+	c = \langle F(k, p_1), F(k, p_2), ..., F(k, p_{\ell})\rangle
 	\]
 	where the operator $\langle \cdot , ..., \cdot \rangle$ represents a a generic combination. In the rest of the section, we will describe some of the most popular modes of operation.
 	\subsection{Electronic Code Book (ECB) mode}
 	This is the simplest mode of operation: it consists in performing the encryption of the data blocks separately, and then concatenating the results, as shown in Figure \ref{fig:ecb}.
 	\begin{figure}[!h]
 		\centering
-		\includegraphics[scale=0.35]{imgs/ecb}
-		\caption{Electronic Code Book (ECB) mode (source: \cite{Katz2007})}
+		\includegraphics[scale=0.4]{imgs/ecb}
+		\captionsetup{width=.55\linewidth}
+		\caption{Visual representation of Electronic Code Book (ECB) mode (source: \cite{Katz2007})}
 		\label{fig:ecb}
-	\end{figure}
+fv 	\end{figure}
 	Therefore, the whole ciphertext is computed as
 	\[
-	C = F(K, P_1)\hspace{5px}||\hspace{5px}F(K, P_2)\hspace{5px}||\hspace{5px}... \hspace{5px}||\hspace{5px}F(K, P_{\ell})
+	C = F(k, p_1)\hspace{5px}||\hspace{5px}F(k, p_2)\hspace{5px}||\hspace{5px}... \hspace{5px}||\hspace{5px}F(k, p_{\ell})
 	\]
 	where the operator $||$ represents a concatenation.
 	
-	This mode of operation is not used in real-world applications: since it's deterministic (i.e. by encrypting the same plaintext multiple times, we always obtain the same ciphertext), it can be proved that it doesn't satisfy the minimum standards of security. 
+	This mode of operation is not used in real-world applications: since it's deterministic (i.e. by encrypting the same plaintext multiple times, we always obtain the same ciphertext), it can be proved that it doesn't satisfy the minimum standards of security. For instance, let's consider the \textit{indistinguishability} property of ciphertexts, which is informally defined as follows:
+	\begin{defn}[Indistinguishability]
+		Two encryptions are said to be \textit{indistinguishable} if it's infeasible for the adversary to distinguish pairs of ciphertexts based on the message they encrypt.
+	\end{defn}
+	Since the ECB mode of operation is deterministic, this property is trivially broken, making ECB intrinsecally insecure. Providing a formal argument of why it is considered "insecure" is out of the scope of our work, but the interested readers can refer to \cite{Katz2007} (Section 3.6.2 "Block-Cipher Modes of Operation"), \cite{Menezes2018}, \cite{Schneier2015} for a detailed discussion on the topic.
 	\subsection{Cipher Block Chaining (CBC) mode}
-	\subsection{Output Feedback (OFB) mode}
+	To encrypt using this mode, we choose uniformly at random an initialization vector ($IV$) of length $n$, which is unique for every encryption. Then, we generate the ciphertext blocks by applying the block cipher to the XOR of the current plaintext block and the previous ciphertext block. Figure \ref{fig:cbc} visually depicts the process.
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.4]{imgs/cbc}
+		\captionsetup{width=.55\linewidth}
+		\caption{Visual representation of Cipher Block Chaining (CBC) mode (source: \cite{Katz2007})}
+		\label{fig:cbc}
+	\end{figure}
+	Mathematically, the ciphertext is the result of the following operations:
+	\[
+	\begin{cases}
+		c_1 = F_k(IV \oplus p_1)\\
+		c_i = F_k(c_{i-1}\oplus p_i) \text{ for all } i>1
+	\end{cases}
+	\]
+	This mode of operation is not deterministic, as the initialisation vector introduces an element of randomness in the encryption. As opposed to the ECB mode, this means that the repeated encryption of the same plaintext results in different ciphertext. This characteristic allows the CBC mode to satisfy the basic standards of security (more precisely, it is CPA-secure\footnote{\url{https://en.wikipedia.org/wiki/Chosen-plaintext\_attack}}).
+	Clearly, the choice of the $IV$ plays a fundamental role in the encryption: in order to ensure the indistinguishability of ciphertexts, it's fundamental to choose it uniformly at random.
+ 	\subsection{Output Feedback (OFB) mode}
+ 	The Output FeedBack (OFB) mode works similarly to the CBC mode, performing some operations in a different order. Figure \ref{fig:ofb} is a high-level depiction of the OFB mode.
+ 	\begin{figure}[!ht]
+ 		\centering
+ 		\includegraphics[scale=0.4]{imgs/ofb}
+ 		\captionsetup{width=.55\linewidth}
+ 		\caption{Visual representation of Output Feedback (OFB) mode mode (source: \cite{Katz2007})}
+ 		\label{fig:ofb}
+ 	\end{figure}
+ 	This mode of operation, like Cipher Block Chaining, also involves a random initialisation vector, whose value must be unpredictable to guarantee the minimum security requirements.
+ 	
+ 	Mathematically, the ciphertext is computed as follows
+ 	\[
+ 	\begin{cases}
+ 		c_1 = F_k(IV) \oplus p_1\\
+ 		c_i = F_k(c_{i-1}) \oplus p_i \text{ for all } i>1
+ 	\end{cases}
+ 	\]
 	\subsection{Counter (CTR) mode}
+	
 	\section{AES: Advanced Encryption Standard}
+	AES \cite{Katz2007} \cite{AES-FIPS} is a block cipher that was born in 1998 as replacement of the obsolete DES, on request of the U.S. government. At first, its use was limited to military purposes, but nowadays it’s one of the most common block ciphers in use, deeply embedded in various applications. In particular, AES is a subset of the Rijndael ciphers, a family of ciphers with different key and block sizes.
+	
 	The AES cipher has a 128-bit block length and can use 128-, 192-, or 256-bit keys. In contrast with DES, which uses a Feistel structure, AES is essentially a so-called Substitution-Permutation network.
 	AES’s algorithm consist of five main steps:
 	\begin{enumerate}
