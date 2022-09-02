@@ -25,6 +25,9 @@
 # define STRICT_ALIGNMENT 0
 #endif
 
+// AES_KEY = struct made of (1) value of the key and (2) n. of rounds
+// n. of rounds depends on key length
+
 static const u32 Te0[256] = {
     0xc66363a5U, 0xf87c7c84U, 0xee777799U, 0xf67b7b8dU,
     0xfff2f20dU, 0xd66b6bbdU, 0xde6f6fb1U, 0x91c5c554U,
@@ -604,19 +607,6 @@ int my_strlen(char *string){
     return len;
 }
 
-void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
-                     size_t len, const AES_KEY *key,
-                     unsigned char *ivec, const int enc)
-{
-
-    if (enc)
-        CRYPTO_cbc128_encrypt(in, out, len, key, ivec,
-                              (block128_f) AES_encrypt);
-    else
-        CRYPTO_cbc128_decrypt(in, out, len, key, ivec,
-                              (block128_f) AES_decrypt);
-}
-
 void CRYPTO_cbc128_encrypt(const unsigned char *in, unsigned char *out,
                            size_t len, const void *key,
                            unsigned char ivec[16], block128_f block)
@@ -670,7 +660,6 @@ void CRYPTO_cbc128_encrypt(const unsigned char *in, unsigned char *out,
 void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out,
                            size_t len, const void *key,
                            unsigned char ivec[16], block128_f block)
-
 {
     size_t n;
     union {
@@ -765,17 +754,16 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out,
 int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
                         AES_KEY *key)
 {
-
     u32 *rk;
     int i = 0;
     u32 temp;
 
-    if (!userKey || !key)
+    if (!userKey || !key)   // if userKey == 0 or key == 0
         return -1;
-    if (bits != 128 && bits != 192 && bits != 256)
+    if (bits != 128 && bits != 192 && bits != 256)      // check key length
         return -2;
 
-    rk = key->rd_key;
+    rk = key->rd_key;   // rk is set to the key value
 
     if (bits == 128)
         key->rounds = 10;
@@ -918,7 +906,8 @@ int AES_set_decrypt_key(const unsigned char *userKey, const int bits,
  * in and out can overlap
  */
 void AES_encrypt(const unsigned char *in, unsigned char *out,
-                 const AES_KEY *key) {
+                 const AES_KEY *key)
+{
 
     const u32 *rk;
     u32 s0, s1, s2, s3, t0, t1, t2, t3;
