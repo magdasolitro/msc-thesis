@@ -12,6 +12,7 @@
 \usepackage{enumitem}
 \usepackage{graphicx,caption}
 \usepackage[toc,page]{appendix}
+\usepackage{algorithm, algpseudocode}
 
 \definecolor{green}{RGB}{60,179,113}
 \definecolor{violet}{RGB}{153,50,204}
@@ -85,17 +86,9 @@
 	\tableofcontents
 	
 	\mainmatter
-	
-	\chapter*{Notation}
-	This chapter constitutes a reference for all the notational conventions and the mathematical symbols used throughout this work, especially in the Static Analysis chapter. 
-	\renewcommand{\arraystretch}{2.0}
-	\setlength{\tabcolsep}{25pt}
-	\begin{tabular}{l l}
-		$\mathcal{L}$ & a generic programming language \\
-		$\mathcal{P}$ & a generic property, i.e. generic a set of programs
-	\end{tabular}\\
-	
+
 	\chapter{Introduction}\label{chapter:intro}
+	
 	
 	\chapter{Static analysis for cybersecurity}\label{chapter:static_analysis}
 	Static analysis is a set of automated techniques used to inspect a program to check whether it satisfies certain properties, without executing it. The origins of static analysis date back to the Seventies and it was initially developed to speed up the compilation process. Nowadays, these techniques are used for a multitude of purposes, such as program verification, synthesis of optimised code, and certification of critical software applications \cite{Rival2020}. 
@@ -538,9 +531,11 @@ uint8_t foo(uint32_t x) {
 	
 	\section{Natural Language Processing (NLP)}
 	\chapter{Block ciphers and AES}\label{appendix:aes}
-	This appendix begins with a brief introduction to block ciphers and modes of operations, before diving deeper into the details of AES.
+	The goal of this appendix is to provide the basic notions concerning block ciphers and modes of operations that are fundamental to understand how AES works. Given the breadth of the topic, here we will discuss only the concepts that are strictly necessary to understand the core of this thesis, but the curious readers can rely on the references given in the rest of the appendix to dig deeper into the topic.
 	
-	\section{Block ciphers}
+	The appendix begins by presenting some game-based security notions, necessary to understand how the security of ciphers is evaluated. Then we briefly describe block ciphers in Section \ref{sec:block-ciphers}, before proceeding with Section \ref{sec:modes}, where we present how a block cipher can be used repeatedly on different part of the message to produce the final encryption. Finally, we have all the tools to reach Section \ref{sec:aes}, concerning the history and the design of AES.
+	
+	\section{Block ciphers}\label{sec:block-ciphers}
 	A block cipher is a deterministic algorithm $F$ that operates on data units of fixed length, called \textit{blocks}. $F$ accepts in input a data block of size $n$, and performs a transformation using a key $k$, producing in output a block of same size as the input. More formally, $F$ is defined as follows:
 	\[
 		F: \{0,1\}^{|k|} \times \{0,1\}^n \rightarrow \{0,1\}^n
@@ -556,12 +551,12 @@ uint8_t foo(uint32_t x) {
 		F^{-1}(k,c) = m
 	\]
 
-	\section{Modes of operation}
+	\section{Modes of operation}\label{sec:modes}
 	There is a clear limitation of block ciphers: they can only encrypt data of fixed size. While the case in which $|m| < n$ can be easily circumvented through padding, if $|m| > n$ we would be forced to discard a part of the message. \textit{Modes of operation} address this problem, providing a way to securely and efficiently encrypt long messages using block ciphers. In simple terms, a mode of operation defines how to concatenate the use of a block cipher in such a way that each cipher encrypts a specific part of the message. In general, if the message has size $|m| > n$, then $m$ is split in $\ell = \frac{|m|}{n}$ different blocks, $m_1$, $m_2$, ... , $m_{\ell}$, and the whole ciphertext is obtained as:
 	\[
 	c = \langle F(k, m_1), F(k, m_2), ..., F(k, m_{\ell})\rangle
 	\]
-	where the operator $\langle \cdot , ..., \cdot \rangle$ represents a a generic combination. In the rest of the section, we will describe the modes of operation that we tested in this thesis. 
+	where the operator $\langle \cdot , ..., \cdot \rangle$ represents a a generic combination. For the sake of brevity, the rest of this section will present only the modes of operation that were tested in this thesis. Those who are interested in other modes can find them in the references provided throughout this Appendix.
 	\subsection{Electronic Code Book (ECB) mode}
 	This is the simplest mode of operation: it consists in performing the encryption of the data blocks separately, and then concatenating the results, as shown in Figure \ref{fig:ecb}.
 	\begin{figure}[!h]
@@ -634,22 +629,35 @@ uint8_t foo(uint32_t x) {
 		\label{fig:ctr}
 	\end{figure}
 	
-	\section{AES: Advanced Encryption Standard}
-	AES \cite{Katz2007} \cite{AES-FIPS} is a block cipher that was born in 1998 as replacement of the obsolete DES, on request of the U.S. government. At first, its use was limited to military purposes, but nowadays it’s one of the most common block ciphers in use, deeply embedded in various applications. In particular, AES is a subset of the Rijndael ciphers, a family of ciphers with different key and block sizes.
+	\section{AES: Advanced Encryption Standard}\label{sec:aes}
+	AES \cite{Katz2007} \cite{AES-FIPS} is a block cipher that was born in 1998 as replacement of the obsolete DES (Data Encryption Standard) \cite{DES1999}, on request of the U.S. government. At first, its use was limited to military purposes, but nowadays it’s one of the most common block ciphers in use, deeply embedded in various applications. 
 	
-	The AES cipher has a 128-bit block length and can use 128-, 192-, or 256-bit keys. In contrast with DES, which uses a Feistel structure, AES is essentially a so-called Substitution-Permutation network.
-	AES’s algorithm consist of five main steps:
+	The AES cipher has a 128-bit block length and can use 128-, 192-, or 256-bit keys; depending on the key length, the algorithm performes 10, 12 or 14 rounds respectively. During the execution, AES works on a $4\times 4$ array of bytes, called \textit{state}, and each step of the algorithm performs a certain trasformation on this state. More precisely, the main operations present in the algorithm are:
 	\begin{enumerate}
-		\item \textsf{KeyExpansion}: a fresh 128-bit key is derived at each round, using the AES key schedule.
-		\item \textsf{AddRoundKey}: in every round of AES, a 128-bit sub-key is derived from the master key, and is interpreted as a 4-by-4 array of bytes. The state array is updated by XORing it with this sub-key.
-		\item \textsf{SubBytes}: ...
-		\item \textsf{ShiftRows}: ...
-		\item \textsf{MixColumns}: ...
+		\item \textsf{KeyExpansion}: Derives fresh 128-bit key at each round, using the AES key schedule.
+		\item \textsf{AddRoundKey}: Combine each byte of the $4\times 4$ state matrix with a byte of the selected key using the XOR ($\oplus$) operation.
+		\item \textsf{SubBytes}: Performs a non-linear substitution where each byte is replaced with another according to a lookup table.
+		\item \textsf{ShiftRows}: Performs a transposition where the last three rows of the state are shifted cyclically of a certain number of steps.
+		\item \textsf{MixColumns}: Performs a linear mixing operation which operates on the columns of the state, combining the four bytes in each column.
 	\end{enumerate}
-	Added to
-	In the final round, MixColumns is replaced by AddRoundKey.
-	Usually, the number of rounds goes from 10 to 14. 
-	
+	Each operation is executed multiple times, according to the order represented in Algorithm \ref{alg:aes}. In this algorithm, we denote with $nRounds$ the number of rounds executed according to the key length, with $K$ the key derived from the AES key schedule at each round, with $S$ the state during each step of the execution, with $SBox$ the non-linear transformation performed during SubBytes, with $nRows$ the amount of shift in the ShiftRow operation, and with $m$ the invertible linear transformation used in MixColumns.
+	\begin{algorithm}[H]
+		\caption{Advanced Encryption Standard: AES}
+		\label{alg:aes}
+		\begin{algorithmic}[1]
+			\For{$i=0$ to $nRounds$}
+			\State $K$ $\leftarrow$ KeyExpansion()
+			\State $S$ $\leftarrow$ AddRoundKey($K$)
+			\State $S$ $\leftarrow$ SubBytes($Sbox$)
+			\State $S$ $\leftarrow$ ShiftRows($nRows$)
+			\State $S$ $\leftarrow$ MixColumns($m$)
+			\State $S$ $\leftarrow$ AddRoundKey($K$)
+			\EndFor
+			\State $S$ $\leftarrow$ SubBytes($Sbox$)
+			\State $S$ $\leftarrow$ ShiftRows($nRows$)
+			\State $S$ $\leftarrow$ MixColumns($m$)
+		\end{algorithmic}
+	\end{algorithm}
 	\bibliography{thesis_ref}{}
 	\bibliographystyle{acm}
 \end{document}
