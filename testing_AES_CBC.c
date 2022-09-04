@@ -27,12 +27,12 @@ int main(){
         0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
         0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
     };
-    AES_KEY aes_key;
+    const AES_KEY *aes_key;
     unsigned char ivec[16];
 
     klee_make_symbolic(&ivec, sizeof(ivec), "ivec");
 
-    AES_set_encrypt_key(key, 128, &aes_key);
+    AES_set_encrypt_key(key, 128, aes_key);
 
-    CRYPTO_cbc128_encrypt((const unsigned char *) in, out, len, key, ivec, (block128_f) AES_encrypt);
+    AES_cbc_encrypt((const unsigned char *) in, out, len, aes_key, ivec, (block128_f) AES_encrypt);
 }
