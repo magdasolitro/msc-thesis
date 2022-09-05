@@ -21,11 +21,11 @@ int my_strlen(char *string){
 
 int main(){
     char *in = "Hello, world! This is my secret message.";
-    unsigned char out[128];
+    unsigned char out[AES_BLOCK_SIZE];
     size_t len = my_strlen(in);
-    const unsigned char key[] = "abcdefgh12345678";
+    const unsigned char key[AES_BLOCK_SIZE] = "abcdefgh12345678";
     AES_KEY *aes_key;
-    unsigned char ivec[16];
+    unsigned char ivec[AES_BLOCK_SIZE];
 
     // temporary buffer used to store the incremented counter
     unsigned char ecount_buf[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};   
