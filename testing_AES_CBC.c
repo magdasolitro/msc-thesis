@@ -7,7 +7,7 @@
 #include <openssl/crypto.h>
 #include <openssl/aes.h>
 #include <klee/klee.h>
-#include "aes_locl.h"
+#include "aes_local.h"
 
 int my_strlen(char *string){
     int len = 0;
