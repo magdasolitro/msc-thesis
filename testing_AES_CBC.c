@@ -10,7 +10,7 @@
 #include "aes_local.h"
 
 int main(){
-    const unsigned char *in = "Hello, world!";
+    const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
     unsigned char out[sizeof(in)];    
     size_t len = sizeof(in);
     const unsigned char key[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
@@ -23,5 +23,5 @@ int main(){
     AES_set_encrypt_key(key, 128, &aes_key);
 
     AES_cbc_encrypt((const unsigned char *) in, out, len, 
-        (const AES_KEY *) aes_key, ivec, (block128_f) AES_encrypt);
+        (const AES_KEY *) &aes_key, ivec, (block128_f) AES_encrypt);
 }
