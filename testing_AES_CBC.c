@@ -7,7 +7,7 @@
 #include <openssl/crypto.h>
 #include <openssl/aes.h>
 #include <klee/klee.h>
-#include "aes_locl.h"
+#include "aes_local.h"
 
 int main(){
     const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
