@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -euo pipefail
 
 # Creating temp folder
 mkdir -p /tmp/sandbox
