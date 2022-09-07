@@ -7,7 +7,7 @@
 #include <openssl/crypto.h>
 #include <openssl/aes.h>
 #include <klee/klee.h>
-#include "aes_local.h"
+#include "aes_locl.h"
 
 int main(){
     const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
@@ -23,5 +23,5 @@ int main(){
     AES_set_encrypt_key(key, 128, &aes_key);
 
     AES_cbc_encrypt((const unsigned char *) in, out, len, 
-        (const AES_KEY *) &aes_key, ivec, (block128_f) AES_encrypt);
+        (const AES_KEY *) &aes_key, ivec, (const int ) 1);
 }
