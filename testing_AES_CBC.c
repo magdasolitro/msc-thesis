@@ -9,21 +9,12 @@
 #include <klee/klee.h>
 #include "aes_local.h"
 
-int my_strlen(char *string){
-    int len = 0;
-
-    for(int i = 0; string[i] != '\0'; i++){
-        len++;
-    }
-
-    return len;
-}
-
 int main(){
-    char *in = "Hello, world! This is my secret message.";
+    char *in = "Hello, world!";
     unsigned char out[128];
-    size_t len = my_strlen(in);
-    const unsigned char key[] = "abcdefgh12345678";
+    size_t len = sizeof(in);
+    const unsigned char key[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+        0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};;
     AES_KEY *aes_key;
     unsigned char ivec[16];
 
