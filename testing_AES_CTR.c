@@ -10,12 +10,12 @@
 #include "aes_local.h" 
 
 int main(){
-    char *in = "Hello, world!";
-    unsigned char out[AES_BLOCK_SIZE];
+    const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
+    unsigned char out[sizeof(in)];    
     size_t len = sizeof(in);
-    const unsigned char key[AES_BLOCK_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
-    AES_KEY *aes_key;
+    const unsigned char key[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
+        0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+    AES_KEY aes_key;
     unsigned char ivec[AES_BLOCK_SIZE];
 
     // temporary buffer used to store the incremented counter
@@ -26,8 +26,8 @@ int main(){
 
     klee_make_symbolic(&ivec, sizeof(ivec), "ivec");
 
-    AES_set_encrypt_key(key, 128, aes_key);
+    AES_set_encrypt_key(key, 128, &aes_key);
 
     AES_ctr128_encrypt((const unsigned char *) in, out, len, 
-        (const AES_KEY *) aes_key, ivec, ecount_buf, num);
+        &aes_key, ivec, ecount_buf, num);
 }
