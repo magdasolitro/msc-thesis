@@ -7,7 +7,7 @@ services:
             context: ./dockerfiles
             dockerfile: kleespectre.Dockerfile
         volumes:
-            - './shareddir:/home/klee/shareddir/'
+            - '../test_files:/home/klee/shareddir/'
         command: '/bin/bash'
         ulimits:
           stack: -1
