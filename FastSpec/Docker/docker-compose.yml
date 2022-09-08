@@ -12,7 +12,7 @@ services:
       stack: -1
       memlock: -1
     volumes:
-      - ./shared:/srv/shared
+      - ../../test_files:/srv/shared
     deploy:
       resources:
         reservations:
