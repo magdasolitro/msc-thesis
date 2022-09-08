@@ -1,0 +1,14 @@
+version: '3'
+services:
+    kleespectre_mag:
+        # image: kleespectre/kleespectre
+        container_name: tradingview
+        build:
+            context: ./dockerfiles
+            dockerfile: kleespectre.Dockerfile
+        volumes:
+            - './shareddir:/home/klee/shareddir/'
+        command: '/bin/bash'
+        ulimits:
+          stack: -1
+
