@@ -8,16 +8,16 @@ set -euo pipefail
 mkdir -p /tmp/sandbox
 
 # Compile needed library
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_cbc.c -o llvm_libraries/aes_cbc.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/modes/cbc128.c -o llvm_libraries/cbc128.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_core.c -o llvm_libraries/aes_core.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_ctr.c -o llvm_libraries/aes_ctr.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/modes/ctr128.c -o llvm_libraries/ctr128.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_ofb.c -o llvm_libraries/aes_ofb.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/modes/ofb128.c -o llvm_libraries/ofb128.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_ecb.c -o llvm_libraries/aes_ecb.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_misc.c -o llvm_libraries/aes_misc.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
-clang -g -c -emit-llvm ../openssl/crypto/aes/aes_wrap.c -o llvm_libraries/aes_wrap.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes -I/home/klee/shareddir/openssl/crypto  -I/home/klee/shareddir/openssl
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_cbc.c -o llvm_libraries/aes_cbc.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/modes/cbc128.c -o llvm_libraries/cbc128.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_core.c -o llvm_libraries/aes_core.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_ctr.c -o llvm_libraries/aes_ctr.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/modes/ctr128.c -o llvm_libraries/ctr128.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_ofb.c -o llvm_libraries/aes_ofb.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/modes/ofb128.c -o llvm_libraries/ofb128.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_ecb.c -o llvm_libraries/aes_ecb.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_misc.c -o llvm_libraries/aes_misc.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes
+clang -g -c -emit-llvm ./openssl/crypto/aes/aes_wrap.c -o llvm_libraries/aes_wrap.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes -I/home/klee/shareddir/openssl/crypto  -I/home/klee/shareddir/openssl
 
 # Building toy.c file
 clang -g -c -emit-llvm testing_AES_OFB.c -o testing_AES_OFB.bc -target x86_64-pc-linux-gnu -I/home/klee/klee_src/include -I/home/klee/shareddir/openssl/include/openssl -I/home/klee/shareddir/openssl/crypto/aes 
