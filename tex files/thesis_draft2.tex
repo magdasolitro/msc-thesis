@@ -88,6 +88,12 @@
 	\mainmatter
 
 	\chapter{Introduction}\label{chapter:intro}
+	Within the harware products market, big companies such as Intel, AMD, Arm strive to produce the faster, smaller, energy-efficient chips to beat the competition and grant themselves the biggest market share. Achieving the best results in every aspect is concretely infeasible: for instance, highly-permorming devices tend to consume a lot of power, while chips must trade small spaces with high memory capacity. Therefore, the main challenge is to reach a decent tradeoff between all the different aspects that condition the performance of a device.
+
+	Speed is a hot topics when it comes to CPU design: essentially, most users want their computer to go \textit{fast}, and to satisfy this request, manifacturers come up every year with all sorts of expedients. One of the most effective dodges to achieve higher performances is called \textit{speculative execution}, which consists in retrieving in advance from the main memory those instructions that have a higher chance to be executed, in order to reduce the time that the processor spends idle, waiting for the instruction and the data it involves to be loaded in the cache. 
+	This comes useful in presence of conditional branches: since we cannot statically infer what set of instructions is going to be executed, the CPU uses stastical information about previous executions to \textit{speculate} about how the conditional expression is going to be evaluated, and thus what set of instruction will need to be retrieved.
+	
+	The introduction of speculative execution successfully improved the CPU performances, but at the same time it introduced some unforeseen vulnerabilities that were discovered only years (?) after these processors were put on the market: Flush+Reload \cite{Yarom2014}, Spectre \cite{Kocher2019}, Meltdown \cite{Lipp2018}, Spoiler \cite{Islam2019} are some of the vulnerabilities that exploit speculative execution to expose potentially secret information. The impact of this discovery was huge, not only because almost all modern processor enforce this kind of execution, but also because it is relatively easy to exploit this vulnerability.
 	
 	
 	\chapter{Static analysis for cybersecurity}\label{chapter:static_analysis}
@@ -481,6 +487,8 @@ uint8_t foo(uint32_t x) {
 	\end{itemize}
 	
 	\section{Testing AES}\label{sec:testing}
+	I decided to test 
+	
 	\appendix
 	\chapter{Complexity theory}\label{appendix:complexity}
 	\section{Complexity classes}
@@ -533,8 +541,38 @@ uint8_t foo(uint32_t x) {
 	\chapter{Block ciphers and AES}\label{appendix:aes}
 	The goal of this appendix is to provide the basic notions concerning block ciphers and modes of operations that are fundamental to understand how AES works. Given the breadth of the topic, here we will discuss only the concepts that are strictly necessary to understand the core of this thesis, but the curious readers can rely on the references given in the rest of the appendix to dig deeper into the topic.
 	
-	The appendix begins by presenting some game-based security notions, necessary to understand how the security of ciphers is evaluated. Then we briefly describe block ciphers in Section \ref{sec:block-ciphers}, before proceeding with Section \ref{sec:modes}, where we present how a block cipher can be used repeatedly on different part of the message to produce the final encryption. Finally, we have all the tools to reach Section \ref{sec:aes}, concerning the history and the design of AES.
+	The appendix begins by presenting some game-based security notions (maybe not), necessary to understand how the security of ciphers is evaluated. Then we briefly describe block ciphers in Section \ref{sec:block-ciphers}, before proceeding with Section \ref{sec:modes}, where we present how a block cipher can be used repeatedly on different part of the message to produce the final encryption. Finally, we have all the tools to reach Section \ref{sec:aes}, concerning the history and the design of AES.
+	\begin{comment}
+
+	\section{Security definitions}\label{ref:sec-defs}
+	In order to evaluate the security of an encryption system, it's necessary to give a precise formulation of what we mean by \textit{"secure"}. Intuitively, when we assess security of a system, we need to take into consideration the interaction between two parties, one who wants to keep an information secret ($\mathcal{A}$) and the other one who wants to illicitely exfiltrate that information ($\mathcal{B}$). Furthermore, we need to define the amount of resources that the adversary can use to guess the value of the information.
 	
+	The natural way to formalise the interaction between two parties with opposite goals is provided by a branch of mathematics called \textit{game theory}, that allow us to formulate three different notions of security through games. In these games, we distinguish two actors:
+	\begin{itemize}
+		\item the \textbf{Challenger}, who represent the honest party. Their task is to provide a challenge that must be solved;
+		\item the \textbf{Attacker}, whose goal is to solve the challenge, and consequently to win the game, using the resources at their disposal.
+	\end{itemize}
+	An encryption scheme is considered to be secure, according to a certain security notion, only if the game that models the notion is infeasible for any adversary to win.
+	
+	\paragraph{Passive indistinguishability}
+	 The first security definition models a situation in which the adversary can only passively eavesdrop the message encrypted by the honest party and has no control over it (i.e. it cannot perform any manipulation of the ciphertext), and it's thus known as \textit{passive indistinguishability} (IND-PAS). More precisely, the malicious party cannot encrypt, nor decrypt any message, i.e. they have no access to the encryption or decryption algorithm. 
+	\paragraph{Indistinguishability under chosen plaintext attack}
+	This paragraph concerns the scenario where an adversary can exercise a partial control over the plaintext, resulting in the notion of \textit{indistinguishability under chosen plaintext attack} (IND-CPA). The attacker has access to the encryption algorithm and can submit any plaintext of their choice to it. Then, they can try to guess the original message by comparing the results obtained with the target ciphertext.
+	
+	Figure \ref{fig:ind-cpa} shows a scheme that models interaction between the parties and the encryption oracle.
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.4]{../imgs/IND-CPA.png}
+		\caption{An IND-CPA game}
+		\label{fig:ind-cpa}
+	\end{figure}
+	
+	To understand how the adversary can exploit the encryption oracle to get the message right, consider a deterministic encryption algorithm, i.e. an algorithm designed in such a way that, if given multiple times the same plaintext, it will always produce the same ciphertext.
+	
+	\paragraph{Indistinguishability under chosen ciphertext attack}
+	The last notions is the strongest, as it models an adversary with a greater amount of resources with respect to the previous two. In this situation, the malicious party can exercise control not only on a chosen plaintext, but also on a chosen ciphertext: for this reason, this security notion is known as \textit{indistinguishability under chosen ciphertext attack} (IND-CCA). 
+	
+	\end{comment}
 	\section{Block ciphers}\label{sec:block-ciphers}
 	A block cipher is a deterministic algorithm $F$ that operates on data units of fixed length, called \textit{blocks}. $F$ accepts in input a data block of size $n$, and performs a transformation using a key $k$, producing in output a block of same size as the input. More formally, $F$ is defined as follows:
 	\[
@@ -557,6 +595,9 @@ uint8_t foo(uint32_t x) {
 	c = \langle F(k, m_1), F(k, m_2), ..., F(k, m_{\ell})\rangle
 	\]
 	where the operator $\langle \cdot , ..., \cdot \rangle$ represents a a generic combination. For the sake of brevity, the rest of this section will present only the modes of operation that were tested in this thesis. Those who are interested in other modes can find them in the references provided throughout this Appendix.
+	\begin{comment}
+
+	
 	\subsection{Electronic Code Book (ECB) mode}
 	This is the simplest mode of operation: it consists in performing the encryption of the data blocks separately, and then concatenating the results, as shown in Figure \ref{fig:ecb}.
 	\begin{figure}[!h]
@@ -577,6 +618,7 @@ uint8_t foo(uint32_t x) {
 		Two encryptions are said to be \textit{indistinguishable} if it's infeasible for the adversary to distinguish pairs of ciphertexts based on the message they encrypt.
 	\end{defn}
 	Since the ECB mode of operation is deterministic, this property is trivially broken, making ECB intrinsecally insecure. Providing a formal argument of why it is considered "insecure" is out of the scope of our work, but the interested readers can refer to \cite{Katz2007} (Section 3.6.2 "Block-Cipher Modes of Operation"), \cite{Menezes2018}, \cite{Schneier2015} for a detailed discussion on the topic.
+	\end{comment}
 	\subsection{Cipher Block Chaining (CBC) mode}
 	To encrypt using this mode, we choose uniformly at random an initialization vector ($IV$) of length $n$, which is unique for every encryption. Then, we generate the ciphertext blocks by applying the block cipher to the XOR of the current plaintext block and the previous ciphertext block. Figure \ref{fig:cbc} visually depicts the process.
 	\begin{figure}[!ht]
@@ -593,9 +635,10 @@ uint8_t foo(uint32_t x) {
 		c_i = F_k(c_{i-1}\oplus m_i) \text{ for all } i>1
 	\end{cases}
 	\]
-	This mode of operation is not deterministic, because the initialisation vector introduces an element of randomness in the encryption. In contrast to the ECB mode, this means that the repeated encryption of the same plaintext results in different ciphertext. This characteristic allows the CBC mode to satisfy the basic standards of security (more precisely, it is CPA-secure\footnote{\url{https://en.wikipedia.org/wiki/Chosen-plaintext\_attack}}). Clearly, the choice of the $IV$ plays a crucial role in the encryption: in order to ensure the indistinguishability of ciphertexts, it's fundamental to choose it uniformly at random. It's also important to note that the $IV$ must be included in the ciphertext to allow a correct decryption.
+	Using a random initialisation vector introduces an element of randomness in the encryption process and makes it not deterministic: the repeated encryption of the same plaintext results in different ciphertext. 
+	We will not dive into the discussion about the security of modes of operations, as it is beyond the scope of this appendix. However, it's sufficient to mention that introducing an element of randomness during the encryption ensures to a greater level of security with respect to deterministic schemes. Clearly, the choice of the $IV$ plays a crucial role: it should be chosen uniformly at random and it must be included in the ciphertext to allow a correct decryption.
 	
-	Despite being secure, this mode of operation presents a mild disadvantage: since the encryption of block $i$ depends on the value of the previous ciphertext, the computation of the final ciphertext can't be parallelised, thus it's not the most efficient choice.
+	Despite being considered secure, this mode of operation presents a mild disadvantage: since the encryption of block $i$ depends on the value of the previous ciphertext, the computation of the final ciphertext can't be parallelised, thus it's not the most efficient choice.
  	\subsection{Output Feedback (OFB) mode}
  	The Output FeedBack (OFB) mode works similarly to the CBC mode, performing some operations in a different order. Figure \ref{fig:ofb} is a high-level depiction of how the OFB mode works.
  	\begin{figure}[!ht]
@@ -623,7 +666,7 @@ uint8_t foo(uint32_t x) {
 	where $ctr$ and $i$ are viewed as integers and addition is done modulo $2^n$. Figure \ref{fig:ctr} depicts In contrast to all the modes discussed previously, the CTR mode has the advantage that encryption and decryption can be fully parallelised, since all the blocks can be computed independently of each other.
 	\begin{figure}[!ht]
 		\centering
-		\includegraphics[scale=0.4]{../imgs/ctr}
+		\includegraphics[scale=0.35]{../imgs/ctr}
 		\captionsetup{width=.55\linewidth}
 		\caption{Visual representation of Counter (CTR) mode mode (source: \cite{Katz2007})}
 		\label{fig:ctr}
@@ -642,16 +685,15 @@ uint8_t foo(uint32_t x) {
 	\end{enumerate}
 	Each operation is executed multiple times, according to the order represented in Algorithm \ref{alg:aes}. In this algorithm, we denote with $nRounds$ the number of rounds executed according to the key length, with $K$ the key derived from the AES key schedule at each round, with $S$ the state during each step of the execution, with $SBox$ the non-linear transformation performed during SubBytes, with $nRows$ the amount of shift in the ShiftRow operation, and with $m$ the invertible linear transformation used in MixColumns.
 	\begin{algorithm}[H]
-		\caption{Advanced Encryption Standard: AES}
+		\caption{Advanced Encryption Standard (AES)}
 		\label{alg:aes}
 		\begin{algorithmic}[1]
-			\For{$i=0$ to $nRounds$}
+			\For{$i=0$ to $nRounds-1$}
 			\State $K$ $\leftarrow$ KeyExpansion()
 			\State $S$ $\leftarrow$ AddRoundKey($K$)
 			\State $S$ $\leftarrow$ SubBytes($Sbox$)
 			\State $S$ $\leftarrow$ ShiftRows($nRows$)
 			\State $S$ $\leftarrow$ MixColumns($m$)
-			\State $S$ $\leftarrow$ AddRoundKey($K$)
 			\EndFor
 			\State $S$ $\leftarrow$ SubBytes($Sbox$)
 			\State $S$ $\leftarrow$ ShiftRows($nRows$)
