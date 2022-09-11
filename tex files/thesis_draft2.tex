@@ -163,7 +163,7 @@
 	
 	Also in this case, we can provide a trivial \texttt{analysis} program that is guaranteed to be complete, namely the one that always returns true. In fact, if the consequence is true, the overall implication will always evaluate to true, independently from the truth value of the premise.
 	
-	Soundness and completeness are two essential aspect of a correct analysis, but an inherent limit of computability prevents us from having both. This limit comes with Gödel's Incompleteness Theorems, which essentially show that there is an intrinsic gap in mathematics between \textit{proof} and \textit{truth}. These theorems are extremely complex and profound, and thus we will not dive into the details, but the interested readers can find out more about the topic in \cite{Odifreddi1989}, \cite{Rogers1987}, \cite{Hinman2007}.
+	Soundness and completeness are two essential aspect of a correct analysis, but an inherent limit of computability prevents us from having both. This limit is a consquence of Gödel's Incompleteness Theorems, which essentially show that there is an intrinsic gap in mathematics between \textit{proof} and \textit{truth}. These theorems are extremely complex and profound, and thus we will not dive into their details, but the interested readers can find out more about the topic in \cite{Odifreddi1989}, \cite{Rogers1987}, \cite{Hinman2007}.
 	\section{Practical approaches and related challenges}
 	This section discusses the general ideas behind some of the most effective approaches used by the tools discussed in Chapter \ref{chapter:verification}. The description should be considered as a high-level introduction whose aim is to give an idea of the mechanisms leveraged by these tools.
 	\subsection{Taint analysis}\label{sec:taint}
@@ -398,7 +398,7 @@ cache = array[value];		// look-up
 	
 	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the vulnerability against Spectre-like attacks. 
 	
-	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework named SpectreGAN. On the other hand we have KLEESpectre \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of this work consists in testing the security of symmetric ciphers in OpenSSL\footnote{Official website: \url{https://www.openssl.org/}}, a popular software library used to ensure secure communication over the network. 
+	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework. On the other hand we have KLEESpectre \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of this work consists in testing the security of symmetric ciphers in OpenSSL\footnote{Official website: \url{https://www.openssl.org/}}, a popular software library used to ensure secure communication over the network. 
 	More precisely, we tackle the following questions: 
 	\begin{enumerate}
 		\item Do FastSpec and KLEESpectre detect any Spectre vulnerability? If so, what variant do they detect?
@@ -407,9 +407,11 @@ cache = array[value];		// look-up
 	\end{enumerate}
 	As specified in \cite{Tol2021}, FastSpec was already used to test OpenSSL v3.0.0 on public-key algorithms and procedures for digital signatures, namely RSA, EDCSA and DSA. Our work targets one specific symmetric-key cipher, AES (Advanced Encryption Standard, see Appendix \ref{appendix:aes}), in different modes of operation. 
 	
-	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on SpectreGAN and KLEESpectre, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and KLEESpectre. 
+	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on FastSpec and KLEESpectre, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and KLEESpectre. 
 
 	\section{FastSpec}\label{sec:fastspec}
+	FastSpec is a detection tool proposed in 2021 in \cite{Tol2021} that leverages on deep learning techniques to detect potential gadgets in Assembly code. The idea is to apply methods from the field of Natural Language Processing (see Appendix \ref{appendix:dl}) to analyse a program as if it was a normal text 
+	\begin{comment}
 	SpectreGAN is a Generative Adversarial Network that was presented along with FastSpec \cite{Tol2021}, a tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods. The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 17 (15 by Kocher \cite{Kocher2018} and 2 modified example introduced by Spectector). Despite being conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
 	
 	The authors of FastSpec target this problem through the following steps:
@@ -433,7 +435,7 @@ cache = array[value];		// look-up
 	As the authors clarify in their work, "\textit{the purpose of SpectreGAN is to develop an intelligent way of creating assembly functions instead of randomly inserting instructions and operands}" \cite{Tol2021}. In this way, they don't simply modify the gadgets with arbitrary changes, but they build a system that learns the features that characterise a vulnerable piece of code and is able to reproduce them in a brand new code snippet.
 	
 	Both the Generator and the Discriminator are implemented with seq2seq, an architecture commonly used for machine translation tasks (see Appendix \ref{appendix:dl}). As for the \textbf{generation phase}, a gadget is sampled from the dataset, divided in tokens, and "masked", i.e. some arbitrary tokens in the gadget are hidden. The Generator learns the leaking patterns by trying to fill correctly the masked positions. As for the \textbf{discrimination phase}, the Discriminator is fed with 1) the embedding vectors corresponding to the original tokens, and 2) the embedding vectors corresponding to the \textit{masked} tokens ...
-	
+	\end{comment}
 	
 	\section{KLEESpectre}\label{sec:kleespectre}
 	KLEESpectre \cite{Wang2019} leverages on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis of a program. As the name suggests, this tool was obtained by modifying the symbolic execution engine KLEE \cite{Cadar2008} to model the branch speculation that are the root of Spectre vulnerabilities. 
@@ -542,7 +544,41 @@ uint8_t foo(uint32_t x) {
 	
 	The last equation makes it clear why this style of training is called \textit{adversarial}: while the Generator tries to minimise a function, the Discriminator tries to maximise it, thus the two networks have opposite goals. (maybe explain better..?)
 	
-	\section{Natural Language Processing (NLP)}
+	\section{Bidirectional Encoder Representations from Transformers (BERT)}
+	BERT \cite{Devlin2018} is a deep learning technique for Natural Language Processing (NLP) proposed by Google in 2018. The goal of this framework is to "learn a language" by understanding of how words fit into different contexts. It's interesting to reflect upon how this mechanism resembles the way non-native speakers learn the meaning of particular words in a new language: it is well known that certain expressions don't have a faithful translation in other languages. For this reason, non-native speakers learn what these words stand for simply by observing in what context they are used and what emotional characterisation they are accompanied by. A similar idea applies also to BERT, that uses transformers, described in the next section, to accomplish this task.
+	
+	\subsection{Transformers}
+	Transformers \cite{Vaswani2017} were introduced in 2017 by a team at Google Brain to improve certain limitations of recurrent neural networks (RNNs), such as LSTMs. The typical architecture is depicted in Figure \ref{fig:transformer}.
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.4]{../imgs/transformers}
+		\captionsetup{width=.55\linewidth}
+		\caption{Transformers architecture (source: \cite{Vaswani2017}). On the left side there is the encoder, while on the right there is the decoder.}
+		\label{fig:transformer}.
+	\end{figure}
+	
+	\paragraph{Input processing}
+	Transformers are typically used for machine translation tasks. For this reason, the input is usually a sentence, namely a set of words, that need to be converted in a mathematical representation in order to be processed by the network. The sentence in a language $\mathcal{L}_1$ is thus passed to the Input Embedding layer, which produces a \textit{vector embedding} for each word. Vector embeddings are a common way to represent words, that tend to assign close vectors to words that have a similar meaning. However, this representation is not enough: as we said in previously in this section, the meaning of a words depends also from the context in which it is placed. For this reason, the vector embeddings are combined with a Positional Encoding, namely a vector that gives context based on the position of the word in a sentence. 
+	
+	After this processing, we obtain a vector representation of the initial sentence that takes into consideration not only the meaning of a words, but also the context in which it appears.
+	\paragraph{Encoding}
+	Once the input processing phase is completed, the vectors are passed to the encoding block, which consists in two main units:
+	\begin{enumerate}
+		\item a \textbf{Multi-head Attention} layer, that computes an attention vector for each word of the sentence: assuming that the sentence contains $n$ words, the attention vector for the $i$-th word is an $n$-dimensional vector, where the $j$-th coefficient represents how important the $j$-th words is to determine the meaning of the $i$-th word;
+		\item a \textbf{Feed-Forward Network}, that is applied to each attention vector, in order to transform them in a way that is more easy to process for the decoder block.
+	\end{enumerate} 
+	
+	\paragraph{Decoder}
+	The decoder is feed with the translation of the sentence that was given in input to the encoder and the same processing steps are performed to transform the sentence into its most accurate mathematical representation. The decoder block has then three main components:
+	\begin{enumerate}
+		\item a \textbf{Masked Multi-head Attention} layer
+	\end{enumerate}
+	
+	\subsection{Architecture}
+	The architecture consists in many layers of encoders
+
+	\subsection{Training}
+	
 	\chapter{Block ciphers and AES}\label{appendix:aes}
 	The goal of this appendix is to provide the basic notions concerning block ciphers and modes of operations that are fundamental to understand how AES works. Given the breadth of the topic, here we will discuss only the concepts that are strictly necessary to understand the core of this thesis, but the curious readers can rely on the references given in the rest of the appendix to dig deeper into the topic.
 	
