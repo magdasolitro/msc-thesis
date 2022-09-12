@@ -410,7 +410,7 @@ cache = array[value];		// look-up
 	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on FastSpec and KLEESpectre, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and KLEESpectre. 
 
 	\section{FastSpec}\label{sec:fastspec}
-	FastSpec is a detection tool proposed in 2021 in \cite{Tol2021} that leverages on deep learning techniques to detect potential gadgets in Assembly code. The idea is to apply methods from the field of Natural Language Processing (see Appendix \ref{appendix:dl}) to analyse a program as if it was a normal text 
+	FastSpec is a detection tool proposed in 2021 in \cite{Tol2021} that leverages on deep learning techniques to detect potential gadgets in Assembly code. The idea is to apply methods from the field of Natural Language Processing (see Appendix \ref{appendix:dl}) to analyse a program as if it was a normal text.
 	\begin{comment}
 	SpectreGAN is a Generative Adversarial Network that was presented along with FastSpec \cite{Tol2021}, a tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods. The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 17 (15 by Kocher \cite{Kocher2018} and 2 modified example introduced by Spectector). Despite being conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
 	
@@ -485,13 +485,17 @@ uint8_t foo(uint32_t x) {
 	The critical scenario, namely the one that poses a security threat, is the third one: the processor executes the instructions contained in the scope of the branching statement, even though the condition is not satisfied. 
 	
 	KLEESpectre is also able to handle the problem of state space explosion, by discarding any path that do not pose any risk of data leakage. In the example shown in Figure \ref{fig:spec_symb_exec} the symbolic states $sp_{T3}$,$sp_{F3}$, $sp_{T4}$ and $sp_{F4}$ are all discarded once KLEESpectre reaches the limit of speculative execution window (SEW, see Section \ref{sec:taint}). 
-	\paragraph{Cache modelling} Speculative symbolic execution is further extended with cache modelling: in simple terms, this means that KLEESpectre models the cache behaviour of an execution path (concrete or speculative) to verify whether a secret value remains in the cache when the program terminates. 
+	\paragraph{Cache modelling} 
+	When it comes to detect Spectre vulnerabilities, being able to determine the instructions that can be executed speculatively is not enough: such are "dangerous" only if they load sensitive values in cache. For this reason, speculative symbolic execution is further extended with \textit{cache modelling}, which allows to keep track of the values stored in cache during the speculative execution by each instruction in the path. When the execution terminates, KLEESpectre computed a symbolic cache model $\Gamma_{spectre}$, namely a set of all memory accesses, that allow to reconstruct what data is still in cache and if it'is thus in danger of being leaked.
 	
-	To do this, KLEESpectre distinguishes between two different types of access:
+	KLEESpectre distinguishes between two types of memory access:
 	\begin{itemize}
 		\item \textit{concrete} accesses, made to a known memory address;
 		\item \textit{symbolic} accesses, made to an address that can be determined only at run time, and thus must be abstracted with a symbolic value. 
 	\end{itemize}
+	The cache model $\Gamma_{spectre}$ is said to be satisfiable if a possible secret $s$, accessed along a speculative path, remains in the cache after the program execution. The size of the generated cache model depends on the Speculative Execution Window (SEW), namely the maximum number of instruction that can be speculatively executed before the outcome of the branch is determined.
+	
+	\paragraph{Implementation} KLEESpectre is built upon the symbolic execution engine KLEE \cite{Cadar2008} and takes in input LLVM bitcode, generated from the original C program using LLVM 6.0.
 	
 	\section{Testing AES}\label{sec:testing}
 	I decided to test 
@@ -545,7 +549,7 @@ uint8_t foo(uint32_t x) {
 	The last equation makes it clear why this style of training is called \textit{adversarial}: while the Generator tries to minimise a function, the Discriminator tries to maximise it, thus the two networks have opposite goals. (maybe explain better..?)
 	
 	\section{Bidirectional Encoder Representations from Transformers (BERT)}
-	BERT \cite{Devlin2018} is a deep learning technique for Natural Language Processing (NLP) proposed by Google in 2018. The goal of this framework is to "learn a language" by understanding of how words fit into different contexts. It's interesting to reflect upon how this mechanism resembles the way non-native speakers learn the meaning of particular words in a new language: it is well known that certain expressions don't have a faithful translation in other languages. For this reason, non-native speakers learn what these words stand for simply by observing in what context they are used and what emotional characterisation they are accompanied by. A similar idea applies also to BERT, that uses transformers, described in the next section, to accomplish this task.
+	BERT \cite{Devlin2018} is a deep learning technique for Natural Language Processing (NLP) proposed by Google in 2018. The goal of this framework is to "learn a language" by understanding of how words fit into different contexts. It's interesting to reflect upon how this mechanism resembles the way non-native speakers learn the meaning of particular words in a new language: it is well known that certain expressions don't have a faithful translation in other languages. For this reason, non-native speakers learn what these words stand for simply by observing in what context they are used and what emotional characterisation they are accompanied by. A similar idea applies also to BERT, that uses transformers (described in the next section) to accomplish this task.
 	
 	\subsection{Transformers}
 	Transformers \cite{Vaswani2017} were introduced in 2017 by a team at Google Brain to improve certain limitations of recurrent neural networks (RNNs), such as LSTMs. The typical architecture is depicted in Figure \ref{fig:transformer}.
@@ -561,23 +565,35 @@ uint8_t foo(uint32_t x) {
 	Transformers are typically used for machine translation tasks. For this reason, the input is usually a sentence, namely a set of words, that need to be converted in a mathematical representation in order to be processed by the network. The sentence in a language $\mathcal{L}_1$ is thus passed to the Input Embedding layer, which produces a \textit{vector embedding} for each word. Vector embeddings are a common way to represent words, that tend to assign close vectors to words that have a similar meaning. However, this representation is not enough: as we said in previously in this section, the meaning of a words depends also from the context in which it is placed. For this reason, the vector embeddings are combined with a Positional Encoding, namely a vector that gives context based on the position of the word in a sentence. 
 	
 	After this processing, we obtain a vector representation of the initial sentence that takes into consideration not only the meaning of a words, but also the context in which it appears.
-	\paragraph{Encoding}
-	Once the input processing phase is completed, the vectors are passed to the encoding block, which consists in two main units:
+	\paragraph{Encoder}
+	Once the input processing phase is completed, the vectors are passed to the encoding block, whose goal is learn the characteristics of the source language and the context of a sentence. The encoder consists in two main units:
 	\begin{enumerate}
 		\item a \textbf{Multi-head Attention} layer, that computes an attention vector for each word of the sentence: assuming that the sentence contains $n$ words, the attention vector for the $i$-th word is an $n$-dimensional vector, where the $j$-th coefficient represents how important the $j$-th words is to determine the meaning of the $i$-th word;
-		\item a \textbf{Feed-Forward Network}, that is applied to each attention vector, in order to transform them in a way that is more easy to process for the decoder block.
+		\item a \textbf{Feed-Forward} layer, that is applied to each attention vector, in order to transform them in a way that is more easy to process for the decoder block.
 	\end{enumerate} 
 	
 	\paragraph{Decoder}
 	The decoder is feed with the translation of the sentence that was given in input to the encoder and the same processing steps are performed to transform the sentence into its most accurate mathematical representation. The decoder block has then three main components:
 	\begin{enumerate}
-		\item a \textbf{Masked Multi-head Attention} layer
+		\item a \textbf{Masked Multi-head Attention} layer, that masks those words in the destination language that haven't been translated. To understand why this layer is necessary, remember that, when we train a transformer, we have at our disposal (1) a whole sentence in the source language (that is fed into the encoder) and (2) the whole translation of the original sentence in the destination language (that is provided to the decoder). To generate the $i$-th word in the destination language, the transformer it is allowed to use (1) \textit{all} the words from the input sentence but (2) \textit{only} the $(i-1)$ previous words of the sentence in the destination language! For this reason, all the words from position $i$ onwards are "masked", i.e. are substituted with a special token (usually \texttt{<MASK>}).
+		\item a \textbf{Multi-head Attention} layer, which takes in input (1) the embedding vectors produced by the encoder and (2) the attention vectors produced by the previous layer of the decoder. The output is a vector where each coefficient expresses how the corresponding word relates to the other elements of the sentence, both in the source and in the destination language.
+		\item a \textbf{Feed-Forward} layer, that has the same purpose as the one in the encoder block.
 	\end{enumerate}
-	
+	The output of the decoder is a vector of probabilities: the $i$-th coefficient corresponds to the probability that the $i$-th words is the next word in the translated sentence.
 	\subsection{Architecture}
-	The architecture consists in many layers of encoders
+	As we said in the previous section, the two block of a transformer accomplish different functions:
+	\begin{itemize}
+		\item the \textbf{encoder} learns what is the source language and what is context;
+		\item the \textbf{decoder} learns how to map words in the source language into words of the destination language.
+	\end{itemize}
+	BERT was designed to solve problems (such as sentiment analysis, question answering, text summarisation, etc.) that have to do only with understanding the language. Therefore, its architecture is only made by a stack of encoders...
 
 	\subsection{Training}
+	The training phase consists in two parts: \textit{pre-training} and \textit{fine-tuning}. The first part is needed to make BERT learn what is language and what is context. Once this phase is completed, we must to fine-tune our model to accomplish a specific task, for example sentiment analysis. BERT is trained on two unsupervised task simultaneously: Masked Language Model (MLM) and Next Sentence Prediction. ...
+	
+	\paragraph{Pre-training} The pre-training p
+	
+	\paragraph{Fine-tuning}
 	
 	\chapter{Block ciphers and AES}\label{appendix:aes}
 	The goal of this appendix is to provide the basic notions concerning block ciphers and modes of operations that are fundamental to understand how AES works. Given the breadth of the topic, here we will discuss only the concepts that are strictly necessary to understand the core of this thesis, but the curious readers can rely on the references given in the rest of the appendix to dig deeper into the topic.
