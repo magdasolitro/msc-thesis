@@ -19,7 +19,6 @@
 \definecolor{blue}{RGB}{65,105,225}
 \definecolor{gray}{RGB}{128,128,128}
 \definecolor{red}{RGB}{255,100,100}
-\definecolor{lightgreen}{RGB}{141,213,161}
 \definecolor{lightpurple}{RGB}{215,189,226}
 \definecolor{lightgreen}{RGB}{171,235,198}
 \definecolor{yellow}{RGB}{249,231,159}
@@ -46,7 +45,7 @@
 	keywordstyle=\color{blue},
 	morekeywords={bool},
 	commentstyle=\color{green},
-	stringstyle=\color{mauve},
+	stringstyle=\color{violet},
 	breaklines=true,
 	breakatwhitespace=true,
 	tabsize=4
@@ -304,11 +303,11 @@ square-and-multiply(M, e, N){
 	\paragraph{Access-driven side channels} 
 	Access-driven attacks, like time-driven ones, leverage on time measurements to unveil the value of some secret information. However, they rely on a much finer kind of measurement: while time-driven attacks are based on the execution time of the whole program, access-driven ones exploit "the ability to
 	detect whether a cache line has been evicted, or not, as the primary
-	mechanism for mounting an attack" \cite{Neve2007}. From this point of view, this attack requires a much finer measurement capacity. A famous example of how to concretely exploit the timing information is \textsc{Flush$+$Reload} \cite{Yarom2014}, an attack that relies on sharing pages between the attacker and the victim processes. \textsc{Flush$+$Reload} can be summarised through the following steps: the adversary's goal is to verify whether the victim uses a secret piece of data $d$. To accomplish this, the adversary's process evicts the cache line containing $d$ and waits a certain amount of time, to give the victim the opportunity of using $d$, in case they need it. Then the attacker reloads the memory line and measures the time to load it: if the victim accessed $d$ during the latency time, the reload will be very quick, because $d$ was already brought back to the cache. Otherwise, $d$ is still in the main memory and the reloading time will be significantly longer, indicating that the victim did not access $d$ during the latency. Figure \ref{fig:flush-reload}, taken from the paper that first described the attack \cite{Yarom2014}, can help clarifying these concepts.
+	mechanism for mounting an attack" \cite{Neve2007}. From this point of view, this attack requires a much finer measurement capacity. A famous example of how to concretely exploit the timing information is \textsc{Flush$+$Reload} \cite{Yarom2014}, an attack that relies on sharing pages between the attacker and the victim processes. \textsc{Flush$+$Reload} can be summarised through the following steps: the adversary's goal is to verify whether the victim uses a secret piece of data $d$. To accomplish this, the adversary's process evicts the cache line containing $d$ and waits a certain amount of time, to give the victim the opportunity of using $d$, in case they need it. Then the attacker reloads the memory line and measures the time to load it: if the victim accessed $d$ during the latency time, the reload will be very quick, because $d$ was already brought back to the cache. Otherwise, $d$ is still in the main memory and the reloading time will be significantly longer, indicating that the victim did not access $d$ during the latency. Figure \ref{fig:flush-reload}, taken from the paper that first described the attack \cite{Yarom2014}, can help clarifying these concepts.  
 	\begin{figure}[h!]
 		\centering
 		\includegraphics[scale=0.3]{../imgs/flush+reload}
-		\captionsetup{width=.8\linewidth}
+		\captionsetup{width=.7\linewidth}
 		\caption{\textsc{Flush+Reload} time measurement \cite{Yarom2014}. (A) and (B) represent the main cases described above. (C), (D), (E) are more peculiar cases.}
 		\label{fig:flush-reload}
 	\end{figure}
@@ -398,20 +397,45 @@ cache = array[value];		// look-up
 	
 	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the vulnerability against Spectre-like attacks. 
 	
-	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework. On the other hand we have KLEESpectre \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of this work consists in testing the security of symmetric ciphers in OpenSSL\footnote{Official website: \url{https://www.openssl.org/}}, a popular software library used to ensure secure communication over the network. 
-	More precisely, we tackle the following questions: 
-	\begin{enumerate}
-		\item Do FastSpec and KLEESpectre detect any Spectre vulnerability? If so, what variant do they detect?
-		\item Do FastSpec and KLEESpectre provide the same results?
-		\item Comparing the results obtained on hash functions implemented in OpenSSL v1.0.0 (last revised in 2015, before the discovering of Spectre) and those implemented in OpenSSL v3.0.0 (the latest version), are there any differences? 
-	\end{enumerate}
+	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework. On the other hand we have \textsc{\textsc{KLEE}Spectre} \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of this work consists in testing the security of symmetric ciphers in OpenSSL\footnote{Official website: \url{https://www.openssl.org/}}, a popular software library used to ensure secure communication over the network. 
+	
 	As specified in \cite{Tol2021}, FastSpec was already used to test OpenSSL v3.0.0 on public-key algorithms and procedures for digital signatures, namely RSA, EDCSA and DSA. Our work targets one specific symmetric-key cipher, AES (Advanced Encryption Standard, see Appendix \ref{appendix:aes}), in different modes of operation. 
 	
-	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on FastSpec and KLEESpectre, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and KLEESpectre. 
+	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:KLEEspectre} provide an overview on FastSpec and \textsc{KLEESpectre}, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and \textsc{KLEESpectre}. 
 
 	\section{FastSpec}\label{sec:fastspec}
-	FastSpec is a detection tool proposed in 2021 in \cite{Tol2021} that leverages on deep learning techniques to detect potential gadgets in Assembly code. The idea is to apply methods from the field of Natural Language Processing (see Appendix \ref{appendix:dl}) to analyse a program as if it was a normal text.
+	As mentioned at the beginning of the chapter, FastSpec was proposed in 2021 in \cite{Tol2021} and so far it represents the only analysis tool that leverges on deep learning to detect Spectre. All the essential notions on deep learning that are needed to understand how the tool works can be found in Appendix \ref{appendix:dl}. 
+	
+	In the paper, the authors present two main ideas: 
+	\begin{enumerate}
+		\item They propose two different methods to generate a large dataset of Spectre gadgets from the 15 originally published in \cite{Kocher2018}: the first one is a traditional algorithm based on mutational fuzzing, while the second one, called SpectreGAN, leverages on a deep learning framework named Generative Adversarial Networks (GANs) \cite{Goodfellow2014}.
+		\item They describe FastSpec, that uses both on GANs and on Natural Language Processing techniques (see Appendix \ref{appendix:dl}) to detect Spectre vulnerabilities.
+	\end{enumerate}
+
+	In this section, we will focus only FastSpec, as the other algorithms are out of the scope of this thesis.
+	
+	FastSpec is essentially a lightweight version of BERT: as described in the dedicated appendix, BERT is a neural network that learns language, by gaining understanding of its syntactical structures and comprehending where different words fit in different contexts. FastSpec is inspired by the same idea, but instead of working with texts written in some human language, it applies it to texts written in a \textit{machine} langauge (Assembly, in this case). The tool should be able to learn the grammatic of low-level code and what syntactical pattern can lead to a Spectre vulnerability.
+	
+	The training of FastSpec is identical to a classical BERT network, thus requires a phase of pre-training followed by fine-tuning (see Appendix \ref{appendix:dl}).
+	
+	\paragraph{Pre-training} To "teach" Assembly to the network, we train it in two unsupervised tasks, the Masked Language Model (MLM) and Next Sentence Prediction (NSP). The former requires us to "mask" random tokens in a piece of code and make the network "guess" their value based on contextual information. The latter, instead, is more complex: normally, it would consist in providing two sentences to the network, that are temporally related to each other, and make the network learn what sentence comes logically before the other. However, Assembly doesn't have syntactical separations as periods or paragraphs: for this reason, Assembly functions are split in pieces of maximum 50 tokens each, and for every piece of function, the following segment is assigned to the label \texttt{IsNext}, while a random piece of function is given with label \texttt{NotNext}.
+	
+	At the end of the training, the FastSpec should have assigned an embedding vector to each token, according to the meaning it learned during the pre-training phase. Tokens with a similar "meaning" (for example, jump instructions or register names) should be mapped to vectors that are close to each other. The authors proved the success of the mapping by depicting a map of the vector distribution in a 3-D space, that we report in Figure \ref{fig:emb_vec}. Note that the vectors live in a high dimensional space, which is impossible for us to visualise: for this reason, the authors employed a specific algorithm (t-SND) to map $H$-dimensional vectors into a 3-D space.
+	 
+	\begin{figure}[!h] 
+		\centering
+		\includegraphics[scale=0.3]{../imgs/emb_vectors_assembly}
+		\captionsetup{width=.7\linewidth}
+		\caption{3-D visualisation of the embedding vectors learned by FastSpec: similar instructions and registers are grouped together by the same color, while unrelated instructions and registers are separated in plane by the axis (source: \cite{Tol2021})}
+		\label{fig:emb_vec}
+	\end{figure}
+	
+	\paragraph{Fine-tuning} In this case, the fine-tuning phase corresponds to a supervised sequence classification: FastSpec needs to learn the conceptual differences between Spectre gadgets and general-purpose functions through labeled pieces. More precisely, the former are labeled with a 0, while the latter are labeled with a 1, and FastSpec is trained to distinguish between the two.
+	\paragraph{} Concretely, FastSpec is trained on a dataset made by a combination of gadgets generated wiht SpectreGAN and disassebled Linux libraries, for a total of 107 million lines of Assembly code. Some minor modifications are made to the code to reduce the vocabulary size: for example, similar tokens are merged together, while all labels, immediate values and out-of-vocabulary tokens are replaced with \texttt{<label>}, \texttt{<imm>} and \texttt{<UNK>}, respectively.
+	
+	The evaluation of the tool gave promising results: as the paper reports, they "obtained 1.3 million true positives and 110 false positives (99.9\% precision rate) in the test dataset, demonstrating the high performance of FastSpec" and they "only have 55 false negatives (99.9\% recall rate)".
 	\begin{comment}
+	\paragraph{Gadget generation} 
 	SpectreGAN is a Generative Adversarial Network that was presented along with FastSpec \cite{Tol2021}, a tool based on deep learning that is able to identify Spectre gadgets much faster than common rule-based methods. The need to employ deep learning techniques comes from a significant limitation encountered in other analysis tools: the detection of vulnerable code sections often relies on a pattern matching process that compares these sections with known gadgets, which amount to only 17 (15 by Kocher \cite{Kocher2018} and 2 modified example introduced by Spectector). Despite being conceptually sound, this strategy falls short at recognising subtle code variations occuring in different programs. Furthermore, such a low number of gadgets makes it difficult to perform a comprehensive analysis of the tools.
 	
 	The authors of FastSpec target this problem through the following steps:
@@ -437,9 +461,9 @@ cache = array[value];		// look-up
 	Both the Generator and the Discriminator are implemented with seq2seq, an architecture commonly used for machine translation tasks (see Appendix \ref{appendix:dl}). As for the \textbf{generation phase}, a gadget is sampled from the dataset, divided in tokens, and "masked", i.e. some arbitrary tokens in the gadget are hidden. The Generator learns the leaking patterns by trying to fill correctly the masked positions. As for the \textbf{discrimination phase}, the Discriminator is fed with 1) the embedding vectors corresponding to the original tokens, and 2) the embedding vectors corresponding to the \textit{masked} tokens ...
 	\end{comment}
 	
-	\section{KLEESpectre}\label{sec:kleespectre}
-	KLEESpectre \cite{Wang2019} leverages on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis of a program. As the name suggests, this tool was obtained by modifying the symbolic execution engine KLEE \cite{Cadar2008} to model the branch speculation that are the root of Spectre vulnerabilities. 
-	\paragraph{Speculative symbolic execution} As already discussed in Section \ref{sec:symbolic-exec}, standard symbolic execution analyses code by representing the different paths that the program can take and abstracting the unknown inputs with symbolic values. For example, consider the following piece of code shown in Figure ... A standard symbolic execution engine like KLEE would explore the paths shown in Figure \ref{fig:standars_symb_exec} : since \texttt{x} is a user-supplied value, and therefore cannot be determined statically, the KLEE would model the two possible outcome for the first conditional statement, on line 5: either the branch condition on \texttt{x} is true ($p_{T1}$) or it is false ($p_{F1}$). The same reasoning is made for the second conditional statement, on line 8.
+	\section{\textsc{KLEESpectre}}\label{sec:kleespectre}
+	\textsc{KLEESpectre} \cite{Wang2019} leverages on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis of a program. As the name suggests, this tool was obtained by modifying the symbolic execution engine KLEE \cite{Cadar2008} to model the branch speculation that are the root of Spectre vulnerabilities. 
+	\paragraph{Speculative symbolic execution} As already discussed in Section \ref{sec:symbolic-exec}, standard symbolic execution analyses code by representing the different paths that the program can take and abstracting the unknown inputs with symbolic values. For example, consider the following piece of code shown below. A standard symbolic execution engine like KLEE would explore the paths shown in Figure \ref{fig:standars_symb_exec}: since \texttt{x} is a user-supplied value, and therefore cannot be determined statically, the KLEE would model the two possible outcome for the first conditional statement, on line 5: either the branch condition on \texttt{x} is true ($p_{T1}$) or it is false ($p_{F1}$). The same reasoning is made for the second conditional statement, on line 8.
 	\begin{lstlisting}[escapechar=!]
 uint32_t SIZE = 16; 
 uint8_t array1[16], array2[256*64], array3[16];
@@ -463,17 +487,17 @@ uint8_t foo(uint32_t x) {
 		\caption{Standard symbolic execution of the program.}
 		\label{fig:standars_symb_exec}
 	\end{figure}
-	KLEESpectre, instead, makes a step further, considering four different scenarios for each branching instruction. For instance, the execution of the first branch is modelled as follows: 
+	\textsc{KLEESpectre}, instead, makes a step further, considering four different scenarios for each branching instruction. For instance, the execution of the first branch is modelled as follows: 
 	\begin{enumerate}
 		\item $p_{T1}$: \texttt{x < SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{green}{correctly predicted}. In this case, the symbolic execution will fork a new state with constraint \texttt{x < SIZE} and proceeds by executing the code fragment highlighted in \colorbox{lightblue}{blue}.
 		\item $p_{F1}$: \texttt{x >= SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{green}{correctly predicted}. In this case, the symbolic execution will fork a new state with constraint \texttt{x >= SIZE} and proceeds by executing the code fragment highlighted in \colorbox{pink}{pink}.
 	\end{enumerate}
 	These are the two cases that are also considered by a standard symbolic execution engine, to which two more are added:
 	\begin{enumerate}[resume]
-		\item $sp_{T1}$: \texttt{x >= SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{red}{mispredicted}. In this case, KLEESpectre forks a new state with constraint \texttt{x >= SIZE}, but proceeds by executing the code fragment highlighted in \colorbox{lightblue}{blue}.
-		\item $sp_{F1}$: \texttt{x < SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{red}{mispredicted}. KLEESpectre forks a new state with constraint \texttt{x < SIZE}, but proceeds by executing the code fragment highlighted in \colorbox{pink}{pink}.
+		\item $sp_{T1}$: \texttt{x >= SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{red}{mispredicted}. In this case, \textsc{KLEESpectre} forks a new state with constraint \texttt{x >= SIZE}, but proceeds by executing the code fragment highlighted in \colorbox{lightblue}{blue}.
+		\item $sp_{F1}$: \texttt{x < SIZE} is satisfiable and the branch \texttt{b1} is \textcolor{red}{mispredicted}. \textsc{KLEESpectre} forks a new state with constraint \texttt{x < SIZE}, but proceeds by executing the code fragment highlighted in \colorbox{pink}{pink}.
 	\end{enumerate}
-	The decision tree produced by KLEESpectre as depicted in Figure \ref{fig:spec_symb_exec}
+	The decision tree produced by \textsc{KLEESpectre} as depicted in Figure \ref{fig:spec_symb_exec}
 	
 	\begin{figure}[!h]
 		\centering
@@ -484,26 +508,101 @@ uint8_t foo(uint32_t x) {
 	
 	The critical scenario, namely the one that poses a security threat, is the third one: the processor executes the instructions contained in the scope of the branching statement, even though the condition is not satisfied. 
 	
-	KLEESpectre is also able to handle the problem of state space explosion, by discarding any path that do not pose any risk of data leakage. In the example shown in Figure \ref{fig:spec_symb_exec} the symbolic states $sp_{T3}$,$sp_{F3}$, $sp_{T4}$ and $sp_{F4}$ are all discarded once KLEESpectre reaches the limit of speculative execution window (SEW, see Section \ref{sec:taint}). 
+	\textsc{KLEESpectre} handles the problem of state space explosion by discarding any path that do not pose any risk of data leakage. In the example shown in Figure \ref{fig:spec_symb_exec} the symbolic states $sp_{T3}$,$sp_{F3}$, $sp_{T4}$ and $sp_{F4}$ are all discarded once \textsc{KLEESpectre} reaches the limit of speculative execution window (SEW), namely the maximum number of instruction that are executed speculatively before the outcome of the branch is resolved. 
 	\paragraph{Cache modelling} 
-	When it comes to detect Spectre vulnerabilities, being able to determine the instructions that can be executed speculatively is not enough: such are "dangerous" only if they load sensitive values in cache. For this reason, speculative symbolic execution is further extended with \textit{cache modelling}, which allows to keep track of the values stored in cache during the speculative execution by each instruction in the path. When the execution terminates, KLEESpectre computed a symbolic cache model $\Gamma_{spectre}$, namely a set of all memory accesses, that allow to reconstruct what data is still in cache and if it'is thus in danger of being leaked.
+	When it comes to detect Spectre vulnerabilities, being able to determine the instructions that can be executed speculatively is not enough: such instructions are "dangerous" only if they load sensitive values in cache. For this reason, speculative symbolic execution is further extended with \textit{cache modelling}, which allows to keep track of the values stored in cache during the speculative execution by each instruction in the path. When the execution terminates, \textsc{KLEESpectre} computed a symbolic cache model $\Gamma_{spectre}$, namely a set of all memory accesses, that allow to reconstruct what data is still in cache and is thus in danger of being leaked.
 	
-	KLEESpectre distinguishes between two types of memory access:
+	\textsc{KLEESpectre} distinguishes between two types of memory access:
 	\begin{itemize}
 		\item \textit{concrete} accesses, made to a known memory address;
 		\item \textit{symbolic} accesses, made to an address that can be determined only at run time, and thus must be abstracted with a symbolic value. 
 	\end{itemize}
 	The cache model $\Gamma_{spectre}$ is said to be satisfiable if a possible secret $s$, accessed along a speculative path, remains in the cache after the program execution. The size of the generated cache model depends on the Speculative Execution Window (SEW), namely the maximum number of instruction that can be speculatively executed before the outcome of the branch is determined.
 	
-	\paragraph{Implementation} KLEESpectre is built upon the symbolic execution engine KLEE \cite{Cadar2008} and takes in input LLVM bitcode, generated from the original C program using LLVM 6.0.
+	\paragraph{Implementation} \textsc{KLEESpectre} is built upon the symbolic execution engine KLEE \cite{Cadar2008} and takes in input LLVM bitcode, generated from the original C program using LLVM 6.0. The three main changes that \textsc{KLEESpectre} imprements with respect to KLEE are the following:
+	\begin{enumerate}
+		\item Generation of speculative symbolic states;
+		\item Propagation of potentially sensitive data;
+		\item Symbolic modelling of cache behaviour;
+	\end{enumerate}
+	As described in Section \ref{sec:symbolic-exec}, the symbolic execution engine maintain a state at each step of the execution, where it keeps track of certain information necessary to proceed correctly, such as the next statement to execute, a symbolic store, and path constraints. \textsc{KLEESpectre} generates two extra symbolic states (one of these is the cache state) to model speculative execution and takes them in consideration in the path selection heuristic (i.e. an heuristic that determines what "direction" is going to be firstly developed by the engine).
 	
-	\section{Testing AES}\label{sec:testing}
-	I decided to test 
+	Furthermore, \textsc{KLEESpectre} leverages on taint analysis to track the propagation of sensitive data. As stated in the paper:
+	\begin{quote}
+		"When a memory load instruction reads a variable $v_s$ from an out-of-bound memory location, we mark $v_s$ as sensitive. All new expressions dependent by $v_s$ are subsequently marked as sensitive as well." (source: \cite{Wang2020})
+	\end{quote} 
+	This mechanism is described more in depth in Section \ref{sec:taint}.
+	
+	Finally, \textsc{KLEESpectre} models the cache to check whether a sensitive address can be observed by a potential adversary at the termination of a program. As quickly mentioned above, the execution state contains also the cache state, to record what information is stored in cache at each step of the execution.
+	
+	\section{Testing the Advanced Encryption Standard (AES)}\label{sec:testing}
+	This section is the core of the thesis: here you will find a precise definition of the research question that I decided to tackle, a description of the methodology that I followed, and the discussion concerning the results I obtained.
+	
+	As I previously mentioned at the beginning of this chapter, the goal of my work is to test the OpenSSL library that implements AES with different tools and verify the presence of vulnerabilities. More precisely, I try to answer the following questions:
+	\begin{enumerate}
+		\item Do FastSpec and \textsc{KLEESpectre} detect any Spectre vulnerability in the AES implementation?
+		\item Do FastSpec and \textsc{KLEESpectre} provide the same results?
+		\item Comparing the results obtained on AES in its OpenSSL v1.0.0 implementation (last revised in 2015, before the discovering of Spectre) in its OpenSSL v3.0.0 implementation (the latest version), are there any differences? 
+	\end{enumerate}
+	The code and the libraries used to answer these questions are available at this GitHub repository: \url{https://github.com/magdasolitro/msc-thesis}.
+	\subsection{Testing with \textsc{KLEESpectre}}
+	Firstly, we tested the libraries with \textsc{\textsc{\textsc{KLEESpectre}}}: all I had to do was to write a brief piece of C code, where we call the functions needed to set up the AES encryption, and then we call a specific function from KLEE to declare what inputs are not known prior execution.
+	
+	For example, the program shown below was used to test AES in CBC mode of operation (see Appendix \ref{appendix:aes}). The most notable variables are:
+	\begin{itemize}
+		\item \texttt{in}, the message to encrypt. Since we are working with AES-128, the size of the string can be at most 16 characters (C uses the ASCII encoding for strings, where each character is consumes 8 bits).
+		\item \texttt{out}, the array where the result of the encryption will be stored.
+		\item \texttt{aes\_key}, a so-called "struct", namely a complex data structure of the C language containing different fields. In this case, \texttt{aes\_key} contains two fields, one for the value of the key and one for the number of rounds.
+		\item \texttt{ivec}, the initalisation vector, which is used in many modes of operation to guarantee a certain degree of randomness in the encryption process (see Appendix \ref{appendix:aes}).
+	\end{itemize}
+	\begin{lstlisting}
+#include <stdio.h>
+#include <openssl/aes.h>
+#include <openssl/modes.h>
+#include <string.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <openssl/crypto.h>
+#include <openssl/aes.h>
+#include <klee/klee.h>
+#include "aes_locl.h"
+
+int main(){
+	const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
+	unsigned char out[sizeof(in)];
+	size_t len = sizeof(in);
+	const unsigned char key[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
+				0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
+	AES_KEY aes_key;
+	unsigned char ivec[AES_BLOCK_SIZE];	
+	
+	klee_make_symbolic(&ivec, sizeof(ivec), "ivec");
+			
+	AES_set_encrypt_key(key, 128, &aes_key);
+			
+	AES_cbc_encrypt((const unsigned char *) in, out, len, 
+			(const AES_KEY *) &aes_key, ivec, (const int ) 1);
+}
+	\end{lstlisting}
+
+	In this program, we use a specific \textsc{KLEE} function called \texttt{klee\_make\_symbolic} to declare what input needs to be abstracted. In this case, we must choose \texttt{ivec}: this value is random and must be refreshed at every encryption, so it cannot be determined by simply scanning the source code. Plus, the adversary can carry out a Spectre attack by manipulating it (FURTHER ELABORATION). The function takes the following parameters:
+	\begin{itemize}
+		\item \texttt{\&ivec} is the address of the abstract variable;
+		\item \texttt{sizeof(ivec)} represents, clearly, its size;
+		\item \texttt{"ivec"} is the name with which \textsc{KLEESpectre} will represent the abstract input when printing the output.
+	\end{itemize}
+	After we set the symbolic value, we fill the fields of the \texttt{aes\_key} struct with OpenSSL function \texttt{AES\_set\_encrypt\_key} and perform the encryption with \texttt{AES\_cbc\_encrypt}.
+	
+	I proceed to illustrate the results obtained for AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode. Instead, I excluded the Electronic CodeBook (ECB) mode because, despite being still in use in certain context, it doesn't satisfy the minum security requirements.
+	
+	(INSERT FIGURES)
+	
+	\subsection{Testing with FastSpec}
+	
+	\subsection{Consideration about the results}
 	
 	\appendix
-	\chapter{Complexity theory}\label{appendix:complexity}
-	\section{Complexity classes}
-	\section{Boolean satisfiability problem: SAT}
+	
 	\chapter{Deep Learning}\label{appendix:dl}
 	\section{Generative Adversarial Networks (GANs)}
 	The Generative Adversarial Network \cite{Goodfellow2014} is a learning framework designed for the task of \textit{generative modelling}, an unsupervised learning task that involves the automatic discovering and learning of patterns in data distributions in such a way that the model can generate new examples that plausibly could have been drawn from the original data set. The innovative idea behind GANs lies in the learning strategy, that sees two actors involved:
@@ -556,7 +655,7 @@ uint8_t foo(uint32_t x) {
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[scale=0.4]{../imgs/transformers}
-		\captionsetup{width=.55\linewidth}
+		\captionsetup{width=.7\linewidth}
 		\caption{Transformers architecture (source: \cite{Vaswani2017}). On the left side there is the encoder, while on the right there is the decoder.}
 		\label{fig:transformer}.
 	\end{figure}
@@ -586,14 +685,19 @@ uint8_t foo(uint32_t x) {
 		\item the \textbf{encoder} learns what is the source language and what is context;
 		\item the \textbf{decoder} learns how to map words in the source language into words of the destination language.
 	\end{itemize}
-	BERT was designed to solve problems (such as sentiment analysis, question answering, text summarisation, etc.) that have to do only with understanding the language. Therefore, its architecture is only made by a stack of encoders...
+	BERT was designed to solve problems (such as sentiment analysis, question answering, text summarisation, etc.) that have to do with understanding language and context, while the translation part is irrelevant. Therefore, BERT's architecture is just made by a stack of encoders.
 
 	\subsection{Training}
-	The training phase consists in two parts: \textit{pre-training} and \textit{fine-tuning}. The first part is needed to make BERT learn what is language and what is context. Once this phase is completed, we must to fine-tune our model to accomplish a specific task, for example sentiment analysis. BERT is trained on two unsupervised task simultaneously: Masked Language Model (MLM) and Next Sentence Prediction. ...
+	The training phase consists in two parts: \textit{pre-training} and \textit{fine-tuning}. The first part is needed to make BERT learn what is language and what is context. Once this phase is completed, we must to fine-tune our model to accomplish a specific task, for example sentiment analysis. 
 	
-	\paragraph{Pre-training} The pre-training p
-	
-	\paragraph{Fine-tuning}
+	\paragraph{Pre-training} Firstly, BERT is trained on two unsupervised task simultaneously: Masked Language Model (MLM) and Next Sentence Prediction (NSP). Note that these tasks are not BERT's final goal! These tasks are only needed to make BERT understand the language, but the training on the objective task will be made only during the fine-tuning phase.
+	During the MLM task, we provide BERT with sentences where random words have been masked and the network must learn to guess the correct word in each place. In order to succeed, BERT is forced to learn the notion of context \textit{within the same sentence} and to evaluate whether a word can fit into a given context or not. For the NSP task,  BERT receives in input two sentences with a temporal connection, meaning that one of the two sentences only makes sense when placed before or after the other (for example, when reading $A =$ "This is John" and $B =$ "He is my friend", we can immediately see that $B$ makes sense only if it's preceeded by $A$). BERT must learn to figure out what sentence comes after the other one: in this way it comprehends context even \textit{across different sentences}.
+	\paragraph{Fine-tuning} Once BERT has been sufficiently trained, we can fine-tune it to accomplish a more specific task, for instance:
+	\begin{itemize}
+		\item classification tasks such as \textbf{sentiment analysis}, which is done similarly to the NSP task.
+		\item \textbf{question answering}...
+		\item ...
+	\end{itemize}
 	
 	\chapter{Block ciphers and AES}\label{appendix:aes}
 	The goal of this appendix is to provide the basic notions concerning block ciphers and modes of operations that are fundamental to understand how AES works. Given the breadth of the topic, here we will discuss only the concepts that are strictly necessary to understand the core of this thesis, but the curious readers can rely on the references given in the rest of the appendix to dig deeper into the topic.
@@ -652,36 +756,13 @@ uint8_t foo(uint32_t x) {
 	c = \langle F(k, m_1), F(k, m_2), ..., F(k, m_{\ell})\rangle
 	\]
 	where the operator $\langle \cdot , ..., \cdot \rangle$ represents a a generic combination. For the sake of brevity, the rest of this section will present only the modes of operation that were tested in this thesis. Those who are interested in other modes can find them in the references provided throughout this Appendix.
-	\begin{comment}
 
-	
-	\subsection{Electronic Code Book (ECB) mode}
-	This is the simplest mode of operation: it consists in performing the encryption of the data blocks separately, and then concatenating the results, as shown in Figure \ref{fig:ecb}.
-	\begin{figure}[!h]
-		\centering
-		\includegraphics[scale=0.4]{../imgs/ecb}
-		\captionsetup{width=.55\linewidth}
-		\caption{Visual representation of Electronic Code Book (ECB) mode (source: \cite{Katz2007})}
-		\label{fig:ecb}
-	\end{figure}
-	Therefore, the whole ciphertext is computed as
-	\[
-	C = F(k, m_1)\hspace{5px}||\hspace{5px}F(k, m_2)\hspace{5px}||\hspace{5px}... \hspace{5px}||\hspace{5px}F(k, m_{\ell})
-	\]
-	where the operator $||$ represents a concatenation.
-	
-	This mode of operation is not used in real-world applications: since it's deterministic (i.e. by encrypting the same plaintext multiple times, we always obtain the same ciphertext), it can be proved that it doesn't satisfy the minimum standards of security. For instance, let's consider the \textit{indistinguishability} property of ciphertexts, which is informally defined as follows:
-	\begin{defn}[Indistinguishability]
-		Two encryptions are said to be \textit{indistinguishable} if it's infeasible for the adversary to distinguish pairs of ciphertexts based on the message they encrypt.
-	\end{defn}
-	Since the ECB mode of operation is deterministic, this property is trivially broken, making ECB intrinsecally insecure. Providing a formal argument of why it is considered "insecure" is out of the scope of our work, but the interested readers can refer to \cite{Katz2007} (Section 3.6.2 "Block-Cipher Modes of Operation"), \cite{Menezes2018}, \cite{Schneier2015} for a detailed discussion on the topic.
-	\end{comment}
 	\subsection{Cipher Block Chaining (CBC) mode}
 	To encrypt using this mode, we choose uniformly at random an initialization vector ($IV$) of length $n$, which is unique for every encryption. Then, we generate the ciphertext blocks by applying the block cipher to the XOR of the current plaintext block and the previous ciphertext block. Figure \ref{fig:cbc} visually depicts the process.
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[scale=0.4]{../imgs/cbc}
-		\captionsetup{width=.55\linewidth}
+		\captionsetup{width=.7\linewidth}
 		\caption{Visual representation of Cipher Block Chaining (CBC) mode (source: \cite{Katz2007})}
 		\label{fig:cbc}
 	\end{figure}
@@ -701,7 +782,7 @@ uint8_t foo(uint32_t x) {
  	\begin{figure}[!ht]
  		\centering
  		\includegraphics[scale=0.4]{../imgs/ofb}
- 		\captionsetup{width=.55\linewidth}
+ 		\captionsetup{width=.7\linewidth}
  		\caption{Visual representation of Output Feedback (OFB) mode mode (source: \cite{Katz2007})}
  		\label{fig:ofb}
  	\end{figure}
@@ -724,7 +805,7 @@ uint8_t foo(uint32_t x) {
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[scale=0.35]{../imgs/ctr}
-		\captionsetup{width=.55\linewidth}
+		\captionsetup{width=.7\linewidth}
 		\caption{Visual representation of Counter (CTR) mode mode (source: \cite{Katz2007})}
 		\label{fig:ctr}
 	\end{figure}
