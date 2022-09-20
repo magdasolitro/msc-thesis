@@ -1,3 +1,0 @@
-[submodule "test_files/openssl"]
-	path = test_files/openssl
-	url = https://github.com/openssl/openssl
