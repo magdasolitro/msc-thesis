@@ -401,10 +401,10 @@ cache = array[value];		// look-up
 	
 	As specified in \cite{Tol2021}, FastSpec was already used to test OpenSSL v3.0.0 on public-key algorithms and procedures for digital signatures, namely RSA, EDCSA and DSA. Our work targets one specific symmetric-key cipher, AES (Advanced Encryption Standard, see Appendix \ref{appendix:aes}), in different modes of operation. 
 	
-	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:KLEEspectre} provide an overview on FastSpec and \textsc{KLEESpectre}, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and \textsc{KLEESpectre}. 
+	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on FastSpec and \textsc{KLEESpectre} respectively, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and \textsc{KLEESpectre}, and we conclude with Section ...., where we make some final considerations about the results we obtained. 
 
 	\section{FastSpec}\label{sec:fastspec}
-	As mentioned at the beginning of the chapter, FastSpec was proposed in 2021 in \cite{Tol2021} and so far it represents the only analysis tool that leverges on deep learning to detect Spectre. All the essential notions on deep learning that are needed to understand how the tool works can be found in Appendix \ref{appendix:dl}. 
+	As mentioned at the beginning of the chapter, FastSpec was proposed in 2021 in \cite{Tol2021} and so far it represents the only analysis tool that leverges on deep learning to detect Spectre. All the essential notions on deep learning that are needed to understand how the tool works can be found in Appendix \ref{appendix:dl}. The GitHub repository of this tool can be found at \url{https://github.com/vernamlab/FastSpec}. 
 	
 	In the paper, the authors present two main ideas: 
 	\begin{enumerate}
@@ -420,7 +420,7 @@ cache = array[value];		// look-up
 	
 	\paragraph{Pre-training} To "teach" Assembly to the network, we train it in two unsupervised tasks, the Masked Language Model (MLM) and Next Sentence Prediction (NSP). The former requires us to "mask" random tokens in a piece of code and make the network "guess" their value based on contextual information. The latter, instead, is more complex: normally, it would consist in providing two sentences to the network, that are temporally related to each other, and make the network learn what sentence comes logically before the other. However, Assembly doesn't have syntactical separations as periods or paragraphs: for this reason, Assembly functions are split in pieces of maximum 50 tokens each, and for every piece of function, the following segment is assigned to the label \texttt{IsNext}, while a random piece of function is given with label \texttt{NotNext}.
 	
-	At the end of the training, the FastSpec should have assigned an embedding vector to each token, according to the meaning it learned during the pre-training phase. Tokens with a similar "meaning" (for example, jump instructions or register names) should be mapped to vectors that are close to each other. The authors proved the success of the mapping by depicting a map of the vector distribution in a 3-D space, that we report in Figure \ref{fig:emb_vec}. Note that the vectors live in a high dimensional space, which is impossible for us to visualise: for this reason, the authors employed a specific algorithm (t-SND) to map $H$-dimensional vectors into a 3-D space.
+	At the end of the training, the FastSpec should have assigned an embedding vector to each token, according to the meaning it learned during the pre-training phase. Tokens with a similar "meaning" (for example, jump instructions or register names) should be mapped to vectors that are close to each other. The authors proved the success of the mapping by depicting a map of the vector distribution in a 3-D space, that we report in Figure \ref{fig:emb_vec}. Note that the vectors live in a high dimensional space, which is impossible for us to visualise: for this reason, the authors employed a specific algorithm (t-SND) to map $n$-dimensional vectors (where $n = 64$ in this case) into a 3-D space.
 	 
 	\begin{figure}[!h] 
 		\centering
@@ -462,7 +462,7 @@ cache = array[value];		// look-up
 	\end{comment}
 	
 	\section{\textsc{KLEESpectre}}\label{sec:kleespectre}
-	\textsc{KLEESpectre} \cite{Wang2019} leverages on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis of a program. As the name suggests, this tool was obtained by modifying the symbolic execution engine KLEE \cite{Cadar2008} to model the branch speculation that are the root of Spectre vulnerabilities. 
+	\textsc{KLEESpectre} \cite{Wang2019} leverages on symbolic execution (see Section \ref{sec:speculative-exec}) and modelling of cache accesses to perform the analysis of a program. As the name suggests, this tool was obtained by modifying the symbolic execution engine KLEE \cite{Cadar2008} to model the branch speculation that are the root of Spectre vulnerabilities. The GitHub repository of this tool can be found at \url{https://github.com/winter2020/kleespectre}.
 	\paragraph{Speculative symbolic execution} As already discussed in Section \ref{sec:symbolic-exec}, standard symbolic execution analyses code by representing the different paths that the program can take and abstracting the unknown inputs with symbolic values. For example, consider the following piece of code shown below. A standard symbolic execution engine like KLEE would explore the paths shown in Figure \ref{fig:standars_symb_exec}: since \texttt{x} is a user-supplied value, and therefore cannot be determined statically, the KLEE would model the two possible outcome for the first conditional statement, on line 5: either the branch condition on \texttt{x} is true ($p_{T1}$) or it is false ($p_{F1}$). The same reasoning is made for the second conditional statement, on line 8.
 	\begin{lstlisting}[escapechar=!]
 uint32_t SIZE = 16; 
@@ -542,7 +542,7 @@ uint8_t foo(uint32_t x) {
 	\begin{enumerate}
 		\item Do FastSpec and \textsc{KLEESpectre} detect any Spectre vulnerability in the AES implementation?
 		\item Do FastSpec and \textsc{KLEESpectre} provide the same results?
-		\item Comparing the results obtained on AES in its OpenSSL v1.0.0 implementation (last revised in 2015, before the discovering of Spectre) in its OpenSSL v3.0.0 implementation (the latest version), are there any differences? 
+		\item Comparing the results obtained on AES in its OpenSSL v1.0.0\footnote{\url{https://github.com/openssl/openssl/tree/91bad2b09eb2ad77da8aca29f80f2d0677e75423}} implementation (last revised in 2015, before the discovering of Spectre) in its OpenSSL v3.0.0 implementation (the latest version), are there any differences? 
 	\end{enumerate}
 	The code and the libraries used to answer these questions are available at this GitHub repository: \url{https://github.com/magdasolitro/msc-thesis}.
 	\subsection{Testing with \textsc{KLEESpectre}}
@@ -593,13 +593,93 @@ int main(){
 	\end{itemize}
 	After we set the symbolic value, we fill the fields of the \texttt{aes\_key} struct with OpenSSL function \texttt{AES\_set\_encrypt\_key} and perform the encryption with \texttt{AES\_cbc\_encrypt}.
 	
-	I proceed to illustrate the results obtained for AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode. Instead, I excluded the Electronic CodeBook (ECB) mode because, despite being still in use in certain context, it doesn't satisfy the minum security requirements.
+	I proceed to illustrate the results obtained for AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode. Instead, I excluded the Electronic CodeBook (ECB) mode because, despite being still in use in certain contexts, it doesn't satisfy the minum security requirements.
 	
-	(INSERT FIGURES)
+	Figures \ref{fig:result_cbc_v1} showS the outcome of \textsc{KLEESpectre} on AES-CBC in OpenSSL v1, finding 4 Spectre vulnerabilities. 
+	
+	\begin{figure}[!h]
+		\centering
+		\includegraphics[scale=0.3]{../imgs/AES_CBC_v1.png}
+		\captionsetup{width=.9\linewidth}
+		\caption{Results of \textsc{KLEESpectre} on AES-CBC in OpenSSL v1.}
+		\label{fig:result_cbc_v1}
+	\end{figure}
+	As specified in the documentation available at the repository's address, the output should be interpreted as follows:
+	\begin{itemize}
+		\item the line that starts with \texttt{KLEE:1BR} indicates the branch whose misprediction causes cause data leakage;
+		\item the line that starts with \texttt{KLEE:2RS} denotes the code line loading the potentially sensitive data;
+		\item the line that starts with \texttt{KLEE:3LS} gives the code line information for leaking the sensitive data to cache state.
+	\end{itemize}
+	The first thing I noticed is that there are essentially no differences between the two versions of OpenSSL: both contain apparently 4 Spectre vulnerabilities. The next step is going to the lines indicated in the output and see whether the outcome provided by the tool makes sense or not. The first culprit piece of code is the following:
+	\begin{lstlisting}[firstnumber=653]
+if (bits == 128) {
+	while (1) {
+		temp  = rk[3];
+		rk[4] = rk[0] ^
+		(Te2[(temp >> 16) & 0xff] & 0xff000000) ^
+		(Te3[(temp >>  8) & 0xff] & 0x00ff0000) ^
+		(Te0[(temp      ) & 0xff] & 0x0000ff00) ^
+		(Te1[(temp >> 24)       ] & 0x000000ff) ^
+		rcon[i];
+		rk[5] = rk[1] ^ rk[4];
+		rk[6] = rk[2] ^ rk[5];
+		rk[7] = rk[3] ^ rk[6];
+		if (++i == 10) {
+			return 0;
+		}
+		rk += 4;
+	}
+}
+rk[4] = GETU32(userKey + 16);
+rk[5] = GETU32(userKey + 20);
+	\end{lstlisting}
+
+	The leaking branch is in \texttt{aes\_core.c}, that implements a set of functions used in all modes of operations of AES. More precisely, this branch is a part of the function \texttt{AES\_set\_encrypt\_key()}, whose job is to create a struct that contains two fields:
+	\begin{itemize}
+		\item \texttt{rd\_key}, representing the value of the key;
+		\item \texttt{rounds}, which contains the number of rounds that the AES must perform. This value depends on the number of bits of the key (specified by the parameter \texttt{bits}), which can be 128, 192, or 256 (see Appendix \ref{appendix:aes}). 
+	\end{itemize}
+	
+	The branch is conditioned on the value of \texttt{bits}, so it makes sense that the leak appears on the branch with guarding expression \texttt{bits == 128}, since we are analysing AES 128. The output of \textsc{KLEESpectre} also tells us which line loads potentially sensitive data, which in this case is line 671 and 672. Apparently, this doesn't make much sense: those lines are located \textit{outside} the conditional branch, thus speculative execution does not involve them. However, since \textsc{KLEESpectre} analyses LLVM bitcode, it's appropriate to see which instructions are evaluated as dangerous. Since bitcode files are generated with an encoding that is not human readable, I must run the following command from terminal:
+	\lstset{
+		language=C,
+		aboveskip=3mm,
+		belowskip=3mm,
+		xleftmargin=5mm,
+		showstringspaces=false,
+		columns=flexible,
+		numbers=none,
+		basicstyle={\small\ttfamily},
+		breaklines=true,
+		breakatwhitespace=true,
+	}
+	\begin{lstlisting}
+	llvm-dis AES_CBC_v1.bc -o readable_bc
+	\end{lstlisting}
+	This command calls the LLVM disassembler, that "takes an LLVM bitcode file and converts it into human-readable LLVM assembly language"\footnote{\url{https://llvm.org/docs/CommandGuide/llvm-dis.html}}. This allows us to ...
+	
+	I tried to run \textsc{KLEESpectre} also on the \texttt{testing\_AES\_CTR.c} and \texttt{testing\_AES\_OFB.c}, to analyse AES-CTR and AES-OFB respectively: the output is shown in Figures \ref{fig:result_ctr_v1} and \ref{fig:result_ofb_v1}. However, these inspections don't reveal anything new: the vulnerabilities are always found in \texttt{aes\_core.c} (which, I remind, defines functions that are used transversely by all AES modes of operations), \texttt{memcpy.c} and \texttt{memset.c}.
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.3]{../imgs/AES_CTR_v1.png}
+		\captionsetup{width=.9\linewidth}
+		\caption{Results of \textsc{KLEESpectre} on AES-CTR in OpenSSL v1.}
+		\label{fig:result_ctr_v1}
+	\end{figure}
+
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.3]{../imgs/AES_OFB_v1.png}
+		\captionsetup{width=.9\linewidth}
+		\caption{Results of \textsc{KLEESpectre} on AES-OFB in OpenSSL v1.}
+		\label{fig:result_ofb_v1}
+	\end{figure}
 	
 	\subsection{Testing with FastSpec}
 	
 	\subsection{Consideration about the results}
+	
+	\chapter{Conclusions}
 	
 	\appendix
 	
