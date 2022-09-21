@@ -1,0 +1,120 @@
+; ModuleID = 'testing_AES_CBC.bc'
+source_filename = "testing_AES_CBC.c"
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
+
+%struct.aes_key_st = type { [60 x i32], i32 }
+
+@main.in = private unnamed_addr constant [16 x i8] c"Hello, world!\00\00\00", align 16
+@main.key = private unnamed_addr constant [16 x i8] c"\00\11\223DUfw\88\99\AA\BB\CC\DD\EE\FF", align 16
+@.str = private unnamed_addr constant [5 x i8] c"ivec\00", align 1
+
+; Function Attrs: noinline nounwind optnone uwtable
+define i32 @main() #0 !dbg !24 {
+entry:
+  %in = alloca [16 x i8], align 16
+  %out = alloca [16 x i8], align 16
+  %len = alloca i64, align 8
+  %key = alloca [16 x i8], align 16
+  %aes_key = alloca %struct.aes_key_st, align 4
+  %ivec = alloca [16 x i8], align 16
+  call void @llvm.dbg.declare(metadata [16 x i8]* %in, metadata !27, metadata !DIExpression()), !dbg !31
+  %0 = bitcast [16 x i8]* %in to i8*, !dbg !31
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %0, i8* getelementptr inbounds ([16 x i8], [16 x i8]* @main.in, i32 0, i32 0), i64 16, i32 16, i1 false), !dbg !31
+  call void @llvm.dbg.declare(metadata [16 x i8]* %out, metadata !32, metadata !DIExpression()), !dbg !34
+  call void @llvm.dbg.declare(metadata i64* %len, metadata !35, metadata !DIExpression()), !dbg !39
+  store i64 16, i64* %len, align 8, !dbg !39
+  call void @llvm.dbg.declare(metadata [16 x i8]* %key, metadata !40, metadata !DIExpression()), !dbg !41
+  %1 = bitcast [16 x i8]* %key to i8*, !dbg !41
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %1, i8* getelementptr inbounds ([16 x i8], [16 x i8]* @main.key, i32 0, i32 0), i64 16, i32 16, i1 false), !dbg !41
+  call void @llvm.dbg.declare(metadata %struct.aes_key_st* %aes_key, metadata !42, metadata !DIExpression()), !dbg !43
+  call void @llvm.dbg.declare(metadata [16 x i8]* %ivec, metadata !44, metadata !DIExpression()), !dbg !45
+  %2 = bitcast [16 x i8]* %ivec to i8*, !dbg !46
+  call void @klee_make_symbolic(i8* %2, i64 16, i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str, i32 0, i32 0)), !dbg !47
+  %arraydecay = getelementptr inbounds [16 x i8], [16 x i8]* %key, i32 0, i32 0, !dbg !48
+  %call = call i32 @AES_set_encrypt_key(i8* %arraydecay, i32 128, %struct.aes_key_st* %aes_key), !dbg !49
+  %arraydecay1 = getelementptr inbounds [16 x i8], [16 x i8]* %in, i32 0, i32 0, !dbg !50
+  %arraydecay2 = getelementptr inbounds [16 x i8], [16 x i8]* %out, i32 0, i32 0, !dbg !51
+  %3 = load i64, i64* %len, align 8, !dbg !52
+  %arraydecay3 = getelementptr inbounds [16 x i8], [16 x i8]* %ivec, i32 0, i32 0, !dbg !53
+  call void @AES_cbc_encrypt(i8* %arraydecay1, i8* %arraydecay2, i64 %3, %struct.aes_key_st* %aes_key, i8* %arraydecay3, i32 1), !dbg !54
+  ret i32 0, !dbg !55
+}
+
+; Function Attrs: nounwind readnone speculatable
+declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
+
+; Function Attrs: argmemonly nounwind
+declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i32, i1) #2
+
+declare void @klee_make_symbolic(i8*, i64, i8*) #3
+
+declare i32 @AES_set_encrypt_key(i8*, i32, %struct.aes_key_st*) #3
+
+declare void @AES_cbc_encrypt(i8*, i8*, i64, %struct.aes_key_st*, i8*, i32) #3
+
+attributes #0 = { noinline nounwind optnone uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { nounwind readnone speculatable }
+attributes #2 = { argmemonly nounwind }
+attributes #3 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!20, !21, !22}
+!llvm.ident = !{!23}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "clang version 6.0.1 (branches/release_60 355598)", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, retainedTypes: !3)
+!1 = !DIFile(filename: "testing_AES_CBC.c", directory: "/home/klee/shareddir/msc-thesis")
+!2 = !{}
+!3 = !{!4, !7, !19}
+!4 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !5, size: 64)
+!5 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !6)
+!6 = !DIBasicType(name: "unsigned char", size: 8, encoding: DW_ATE_unsigned_char)
+!7 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !8, size: 64)
+!8 = !DIDerivedType(tag: DW_TAG_const_type, baseType: !9)
+!9 = !DIDerivedType(tag: DW_TAG_typedef, name: "AES_KEY", file: !10, line: 86, baseType: !11)
+!10 = !DIFile(filename: "/usr/include/openssl/aes.h", directory: "/home/klee/shareddir/msc-thesis")
+!11 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "aes_key_st", file: !10, line: 78, size: 1952, elements: !12)
+!12 = !{!13, !18}
+!13 = !DIDerivedType(tag: DW_TAG_member, name: "rd_key", scope: !11, file: !10, line: 82, baseType: !14, size: 1920)
+!14 = !DICompositeType(tag: DW_TAG_array_type, baseType: !15, size: 1920, elements: !16)
+!15 = !DIBasicType(name: "unsigned int", size: 32, encoding: DW_ATE_unsigned)
+!16 = !{!17}
+!17 = !DISubrange(count: 60)
+!18 = !DIDerivedType(tag: DW_TAG_member, name: "rounds", scope: !11, file: !10, line: 84, baseType: !19, size: 32, offset: 1920)
+!19 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!20 = !{i32 2, !"Dwarf Version", i32 4}
+!21 = !{i32 2, !"Debug Info Version", i32 3}
+!22 = !{i32 1, !"wchar_size", i32 4}
+!23 = !{!"clang version 6.0.1 (branches/release_60 355598)"}
+!24 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 12, type: !25, isLocal: false, isDefinition: true, scopeLine: 12, isOptimized: false, unit: !0, variables: !2)
+!25 = !DISubroutineType(types: !26)
+!26 = !{!19}
+!27 = !DILocalVariable(name: "in", scope: !24, file: !1, line: 13, type: !28)
+!28 = !DICompositeType(tag: DW_TAG_array_type, baseType: !5, size: 128, elements: !29)
+!29 = !{!30}
+!30 = !DISubrange(count: 16)
+!31 = !DILocation(line: 13, column: 25, scope: !24)
+!32 = !DILocalVariable(name: "out", scope: !24, file: !1, line: 14, type: !33)
+!33 = !DICompositeType(tag: DW_TAG_array_type, baseType: !6, size: 128, elements: !29)
+!34 = !DILocation(line: 14, column: 19, scope: !24)
+!35 = !DILocalVariable(name: "len", scope: !24, file: !1, line: 15, type: !36)
+!36 = !DIDerivedType(tag: DW_TAG_typedef, name: "size_t", file: !37, line: 62, baseType: !38)
+!37 = !DIFile(filename: "/tmp/llvm-60-install_O_D_A/lib/clang/6.0.1/include/stddef.h", directory: "/home/klee/shareddir/msc-thesis")
+!38 = !DIBasicType(name: "long unsigned int", size: 64, encoding: DW_ATE_unsigned)
+!39 = !DILocation(line: 15, column: 12, scope: !24)
+!40 = !DILocalVariable(name: "key", scope: !24, file: !1, line: 16, type: !28)
+!41 = !DILocation(line: 16, column: 25, scope: !24)
+!42 = !DILocalVariable(name: "aes_key", scope: !24, file: !1, line: 18, type: !9)
+!43 = !DILocation(line: 18, column: 13, scope: !24)
+!44 = !DILocalVariable(name: "ivec", scope: !24, file: !1, line: 19, type: !33)
+!45 = !DILocation(line: 19, column: 19, scope: !24)
+!46 = !DILocation(line: 21, column: 24, scope: !24)
+!47 = !DILocation(line: 21, column: 5, scope: !24)
+!48 = !DILocation(line: 23, column: 25, scope: !24)
+!49 = !DILocation(line: 23, column: 5, scope: !24)
+!50 = !DILocation(line: 25, column: 45, scope: !24)
+!51 = !DILocation(line: 25, column: 49, scope: !24)
+!52 = !DILocation(line: 25, column: 54, scope: !24)
+!53 = !DILocation(line: 26, column: 37, scope: !24)
+!54 = !DILocation(line: 25, column: 5, scope: !24)
+!55 = !DILocation(line: 27, column: 1, scope: !24)

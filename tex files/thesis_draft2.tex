@@ -137,9 +137,9 @@
 	\mathcal{P}\text{ is trivial} \Longleftrightarrow \mathcal{P} = \mathcal{L} \vee \mathcal{P} = \emptyset
 	\]
 	Clearly, we are not interested in trivial properties, because there is really nothing to prove about them in a program!
-	Intuitively, what Rice's theorem states is that, for \textit{any interesting property}, we cannot have an algorithm that is able to decide whether a certain program has that property or not. This sounds discouraging: the theorems mentioned above seem to destroy any hope of being able to prove anything interesting about programs. Luckily, this is not quite the case: while it is impossible to have an automated procedure that correctly detects a certain property in \textit{all} cases, it is perfectly feasible that it does it \textit{sometimes}. This also means that it's impossible to construct a "perfect" static analysis tool, namely one that is always able to detect any (extensional) property of a program: this justifies the existance of a research field dedicated to static analysis.
+	Intuitively, what Rice's theorem states is that, for \textit{any interesting property}, we cannot have an algorithm that is able to decide whether a certain program has that property or not. This sounds discouraging: the theorems mentioned above seem to destroy any hope of being able to prove anything interesting about programs. Luckily, this is not quite the case: while it is impossible to have an automated procedure that correctly detects a certain property in \textit{all} cases, it is perfectly possible that it does it \textit{sometimes}. This also means that it's impossible to construct a "perfect" static analysis tool, namely one that is always able to detect any (extensional) property of a program: this justifies the existance of a research field dedicated to static analysis.
 	
-	What we just said implies that the results provided by the algorithm will occasionally produce unreliable results, such as false positives and false negatives: the former refers to the detection of bugs that the program doesn't actually have, while the second one concern the failure of finding bugs that the code indeed has. False negatives are clearly a much bigger issue, because they lead to a false sense of security. For this reason, a good tool for static analysis should never fail to detect bugs, while it is allowed to output a false positive \cite{Gomes2009}. Another way around the limitation of Rice's Theorem is to give up complete automation, designing tools that require human intervention to compute the final result, accepting the risk of introducing mistakes in the computation of the final result.
+	What we just said implies that the results provided by the algorithm will occasionally produce incorrect results, such as false positives and false negatives: the former refers to the detection of bugs that the program doesn't actually have, while the second one regards the failure of finding bugs that the code indeed has. False negatives are clearly a much bigger issue, because they lead to a false sense of security: for this reason, a good tool for static analysis should never fail to detect bugs, while it is allowed to output a false positive \cite{Gomes2009}. Another way around the limitation of Rice's Theorem is to give up complete automation, designing tools that require human intervention to compute the final result, accepting the risk of introducing mistakes in the computation of the final result.
 	
 	The desiderable properties of a program analysis tools can be formalised by means of two notions: \textit{soundness} and \textit{completeness}.
 	
@@ -164,10 +164,10 @@
 	
 	Soundness and completeness are two essential aspect of a correct analysis, but an inherent limit of computability prevents us from having both. This limit is a consquence of Gödel's Incompleteness Theorems, which essentially show that there is an intrinsic gap in mathematics between \textit{proof} and \textit{truth}. These theorems are extremely complex and profound, and thus we will not dive into their details, but the interested readers can find out more about the topic in \cite{Odifreddi1989}, \cite{Rogers1987}, \cite{Hinman2007}.
 	\section{Practical approaches and related challenges}
-	This section discusses the general ideas behind some of the most effective approaches used by the tools discussed in Chapter \ref{chapter:verification}. The description should be considered as a high-level introduction whose aim is to give an idea of the mechanisms leveraged by these tools.
+	This section discusses the general concepts behind the approaches used by the tools discussed in Chapter \ref{chapter:verification}. The description should be considered as a high-level introduction whose aim is to give an idea of the mechanisms leveraged by these tools, but more accurate descriptions can be found in the papers cited throughout this section.
 	\subsection{Taint analysis}\label{sec:taint}
-	Taint analysis is a technique that involves labelling each variable supplied to the program by an untrusted source as \textit{tainted}, assuming that the untrusted source could be an adversary trying to attack the system.
-	Then, every variable in the program whose value is dependent from tainted variables is also marked as tainted. In this way, we can keep track of the propagation of tainted data during the program execution and detect when this data is used in dangerous ways. Taint analysis can be used to identify parts of code vulnerable to Spectre: for instance, in a Spectre-PHT attack, certain values can be supplied repeatedly to a conditional branch to induce a misprediction. The following example shows a Spectre-PHT gadget where the tainted variables are marked in red:
+	Taint analysis is a technique that involves labelling each variable supplied to the program by an untrusted source as \textit{tainted}, assuming that the untrusted source could be an adversary trying to attack the system  through that variable.
+	Then, every variable in the program whose value is dependent from tainted variables is also marked as tainted. In this way, we can keep track of the propagation of tainted data in the following instructions and detect when this data is used in dangerous ways. Taint analysis can be used to identify parts of code vulnerable to Spectre: for instance, in a Spectre-PHT attack, certain values can be supplied repeatedly to a conditional branch to induce a misprediction. The following example shows a Spectre-PHT gadget where the tainted variables are marked in red:
 	
 	\begin{lstlisting}[escapechar=!]
 int checkValue(int !\colorbox{red}{x}!){
@@ -200,11 +200,11 @@ if(x == $n$){
 	y = $n$;
 }
 \end{lstlisting}
-	This program is semantically equivalent to the following instruction:
+	The program is semantically equivalent to the following instruction:
 	\begin{lstlisting}
 y = x;
 	\end{lstlisting}
-	However, a taint analysis will mark \texttt{y} as tainted in the last instruction, but not in the first example. Under-tainting affects TaintCheck \cite{Newsome2005}, even though the authors proposed some mitigations to the problem.
+	A taint analysis will mark \texttt{y} as tainted in the last instruction, but not in the first example.
 	
 	The opposite problem is \textbf{over-tainting}, which leads to the detection of false positives: a piece of code can be evaluated as insecure, even in the absence of any feasible execution that taints a certain data. As already stated previously in this chapter, false positives are preferred to false negatives, since the latter can give a false sense of security and fail to notify potential vulnerabilities. One source of over-tainting can be a conservative extraction of the Control Flow Graph (CFG), which is defined as follows:
 	\begin{defn}[Control Flow Graph (CFG)]
@@ -213,7 +213,7 @@ y = x;
 	
 	The construction of an accurate graph from the binary is often challenging, due to the difficulty in determining the targets of indirect branches and function calls. For this reason, tools such as oo7 \cite{Wang2019} use a conservative approximation of the CFG, which can contain more edges that expected.
 	
-	The last issue worth mentioning is the \textbf{state space explosion} (also known as path explosion), which can occur during the construction of the CFG or the Control Dependency Graph (CDG). The latter is defined as follows: (TO BE REVIEWED)
+	The last issue worth mentioning is the \textbf{state space explosion} (also known as path explosion), which can occur during the construction of the CFG or the Control Dependency Graph (CDG). The latter is defined as follows:
 	
 	\begin{defn}[Control Dependency Graph (CDG)]
 		A \textit{control dependency graph (CDG)} \cite{Krinke2007} is a directed graph $G=(V,E)$ in which nodes represent the program's statements or expressions, while an edge $x\rightarrow y$ expresses the fact that the statement $x$ assigns a variable which is used in $y$, which means that the mere execution of $y$ depends on the value of the expression $x$. 
