@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <openssl/crypto.h>
-#include "aes_local.h"
+#include <aes_locl.h>
 
 int main(){
     const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
