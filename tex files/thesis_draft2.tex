@@ -593,9 +593,7 @@ int main(){
 	\end{itemize}
 	After we set the symbolic value, we fill the fields of the \texttt{aes\_key} struct with OpenSSL function \texttt{AES\_set\_encrypt\_key} and perform the encryption with \texttt{AES\_cbc\_encrypt}.
 	
-	I proceed to illustrate the results obtained for AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode. Instead, I excluded the Electronic CodeBook (ECB) mode because, despite being still in use in certain contexts, it doesn't satisfy the minum security requirements.
-	
-	Figures \ref{fig:result_cbc_v1} showS the outcome of \textsc{KLEESpectre} on AES-CBC in OpenSSL v1, finding 4 Spectre vulnerabilities. 
+	\paragraph{Testing OpenSSL v1} This paragraph shows the results obtained for AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode. Figures \ref{fig:result_cbc_v1} depict the outcome of \textsc{KLEESpectre} on AES-CBC in OpenSSL v1 (more precisely, version 1.0.0), finding 4 Spectre vulnerabilities. 
 	
 	\begin{figure}[!h]
 		\centering
@@ -640,7 +638,9 @@ rk[5] = GETU32(userKey + 20);
 		\item \texttt{rounds}, which contains the number of rounds that the AES must perform. This value depends on the number of bits of the key (specified by the parameter \texttt{bits}), which can be 128, 192, or 256 (see Appendix \ref{appendix:aes}). 
 	\end{itemize}
 	
-	The branch is conditioned on the value of \texttt{bits}, which represents the length of the key: it's plausible that the leak appears on the branch with guarding expression \texttt{bits == 128}, since we are analysing AES 128. The output of \textsc{KLEESpectre} also tells us which line loads potentially sensitive data, which in this case is line 671 and 672. Apparently, this doesn't make much sense: those lines are located \textit{outside} the conditional branch, thus speculative execution does not involve them. However, since \textsc{KLEESpectre} analyses LLVM bitcode, it's appropriate to see which instructions are evaluated as dangerous. Since bitcode files are generated with an encoding that is not human readable, I must run the following command from terminal:
+	The branch is conditioned on the value of \texttt{bits}, which represents the length of the key: it's plausible that the leak appears on the branch with guarding expression \texttt{bits == 128}, since we are analysing AES 128. The output of \textsc{KLEESpectre} also tells us which line loads potentially sensitive data, which in this case is line 671 and 672. Apparently, this doesn't make much sense: those lines are located \textit{outside} the conditional branch, thus speculative execution does not involve them. (WHY?)
+	\begin{comment}
+	However, since \textsc{KLEESpectre} analyses LLVM bitcode, it's appropriate to see which instructions are evaluated as dangerous. Since bitcode files are generated with an encoding that is not human readable, I must run the following command from terminal:
 	\lstset{
 		language=C,
 		aboveskip=3mm,
@@ -653,16 +653,17 @@ rk[5] = GETU32(userKey + 20);
 		breaklines=true,
 		breakatwhitespace=true,
 	}
+
 	\begin{lstlisting}
 	llvm-dis testing_AES_CBC.bc -o cbc_readable
 	\end{lstlisting}
 	This command calls the LLVM disassembler, that "takes an LLVM bitcode file and converts it into human-readable LLVM assembly language"\footnote{\url{https://llvm.org/docs/CommandGuide/llvm-dis.html}}. This allows us to ...
-	
+	\end{comment}
 	I tried to run \textsc{KLEESpectre} also on two more files, \texttt{testing\_AES\_CTR.c} and \texttt{testing\_AES\_OFB.c}, to analyse AES-CTR and AES-OFB respectively: the output is shown in Figures \ref{fig:result_ctr_v1} and \ref{fig:result_ofb_v1}. However, these inspections don't reveal anything new: the vulnerabilities are always found in \texttt{aes\_core.c} (which, I remind, defines functions that are used transversely by all AES modes of operations), \texttt{memcpy.c} and \texttt{memset.c}.
 	\begin{figure}[!ht]
 		\centering
-		\includegraphics[scale=0.3]{../imgs/AES_CTR_v1.png}
-		\captionsetup{width=.9\linewidth}
+		\includegraphics[scale=0.35]{../imgs/AES_CTR_v1.png}
+		\captionsetup{width=.8\linewidth}
 		\caption{Results of \textsc{KLEESpectre} on AES-CTR in OpenSSL v1.}
 		\label{fig:result_ctr_v1}
 	\end{figure}
@@ -670,11 +671,36 @@ rk[5] = GETU32(userKey + 20);
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[scale=0.3]{../imgs/AES_OFB_v1.png}
-		\captionsetup{width=.9\linewidth}
+		\captionsetup{width=.8\linewidth}
 		\caption{Results of \textsc{KLEESpectre} on AES-OFB in OpenSSL v1.}
 		\label{fig:result_ofb_v1}
 	\end{figure}
+
+	\paragraph{Testing OpenSSL v3} In this paragraph, I repeat the same tests on OpenSSL v3 (more precisely, on version 3.0.0), to see if something has changed after the discovery of Spectre. In order to reproduce these tests, one should run \texttt{test\_KLEESpectre\_v3.sh} and substituting in every testing file the line \texttt{\#include "aes\_locl.h"} with \texttt{\#include "aes\_local.h"}, as the name of the header changed throughout the versions. Figures \ref{fig:result_cbc_v3}, \ref{fig:result_ctr_v3}, and \ref{fig:result_ofb_v3} show the results obtained.
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.35]{../imgs/AES_CBC_v3.png}
+		\captionsetup{width=.8\linewidth}
+		\caption{Results of \textsc{KLEESpectre} on AES-CBC in OpenSSL v3.}
+		\label{fig:result_cbc_v3}
+	\end{figure}
 	
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.35]{../imgs/AES_CTR_v3.png}
+		\captionsetup{width=.8\linewidth}
+		\caption{Results of \textsc{KLEESpectre} on AES-CTR in OpenSSL v3.}
+		\label{fig:result_ctr_v3}
+	\end{figure}
+
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.35]{../imgs/AES_OFB_v3.png}
+		\captionsetup{width=.8\linewidth}
+		\caption{Results of \textsc{KLEESpectre} on AES-OFB in OpenSSL v3.}
+		\label{fig:result_ofb_v3}
+	\end{figure}
+
 	\subsection{Testing with FastSpec}
 	The second part of this thesis concerns testing AES in different modes of operation with FastSpec.
 	

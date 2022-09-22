@@ -13,8 +13,8 @@ services:
       memlock: -1
     volumes:
       - ../../test_files:/srv/shared
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - capabilities: [gpu]

@@ -7,11 +7,11 @@
 #include <openssl/crypto.h>
 #include <openssl/aes.h>
 #include <klee/klee.h>
-#include "aes_locl.h" 
+#include "aes_local.h" 
 
 int main(){
     const unsigned char in[AES_BLOCK_SIZE] = "Hello, world!";
-    unsigned char out[sizeof(in)];    
+    unsigned char out[sizeof(in)];
     size_t len = sizeof(in);
     const unsigned char key[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
         0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
@@ -19,15 +19,15 @@ int main(){
     unsigned char ivec[AES_BLOCK_SIZE];
 
     // temporary buffer used to store the incremented counter
-    unsigned char ecount_buf[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};   
+    unsigned char ecount_buf[16]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
     // holds the state information in a form of the number of bytes used out of the total block size.
-    unsigned int *num=0;      
+    unsigned int *num=0;
 
     klee_make_symbolic(&ivec, sizeof(ivec), "ivec");
 
     AES_set_encrypt_key(key, 128, &aes_key);
 
-    AES_ctr128_encrypt((const unsigned char *) in, out, len, 
+    AES_ctr128_encrypt((const unsigned char *) in, out, len,
         &aes_key, ivec, ecount_buf, num);
 }

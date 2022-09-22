@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <openssl/crypto.h>
+#include <openssl/aes.h>
 #include "aes_local.h"
 
 int main(){
@@ -16,11 +17,8 @@ int main(){
     AES_KEY aes_key;
     unsigned char ivec[AES_BLOCK_SIZE];
 
-    // holds the state information in a form of the number of bytes used out of the total block size.
-    int *num=0;
-
     AES_set_encrypt_key(key, 128, &aes_key);
 
-    AES_ofb128_encrypt((const unsigned char *) in, out, len,
-        (const AES_KEY *) &aes_key, ivec, num);
+    AES_cbc_encrypt((const unsigned char *) in, out, len,
+        (const AES_KEY *) &aes_key, ivec, (const int ) 1);
 }
