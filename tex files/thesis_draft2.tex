@@ -812,11 +812,12 @@ void *memset(void *dst, int s, size_t count) {
 		\label{fig:result_cbc_v3}
 	\end{figure}
 
-	The first vulnerability involges once again two different files, \texttt{aes\_core.c} and \texttt{cbc128.c}, and points at the code snippets shown in listings \ref{aes-core3} and \ref{cbc128_3} respectively.
+	The first vulnerability involves once again two different files: according to the output, the branch identified as vulnerable is located on line 671 of \texttt{aes\_core.c}, while the instruction responsible for performing a dangerous loading is on line 61 of \texttt{cbc128.c}. The corresponding listings are reported in \ref{aes-core3} and \ref{cbc128_3}.
 	
 	\begin{minipage}{.9\textwidth}
-		\begin{lstlisting}[caption={\texttt{aes\_core.c}}, label=aes-core3]
+		\begin{lstlisting}[caption={\texttt{aes\_core.c}}, label=aes-core3, firstnumber=667]
 void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key){
+	
 	const u64 *rk;
 		
 	assert(in && out && key);
@@ -828,19 +829,49 @@ void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key
 	\end{minipage}
 	
 	\begin{minipage}{.7\textwidth}
-\begin{lstlisting}[caption={\texttt{cbc128.c}}, label=cbc128_3]{Name}
+\begin{lstlisting}[caption={\texttt{cbc128.c}}, label=cbc128_3, firstnumber=60]{Name}
 for (n = 0; n < 16 && n < len; ++n)
 	out[n] = in[n] ^ iv[n];
 \end{lstlisting}
 	\end{minipage}
 	\vspace{3mm}
 	
-	Once again, the vulnerability concerns two different files, without any explicit call between each other. 
+	The first thing that catches the eye is that line 671 contains neither a branch nor a cycle, but an \texttt{assert} statement: these kind of instructions are used to check whether the arguments passed to the function are "legal", i.e. they satisfy certain requirements that allow a correct processed. In this case, the assertion checks whether the user provided non-null inputs, but it's not clear why the statement is seen as a branch by \texttt{KLEESpectre}. One hypothesis is that LLVM translates the \texttt{assert} instruction into a series of conditional statements that check the validity of the input arguments, and terminate the execution or throw an error when the values are illegal. We look at \texttt{assembly.ll} to seek a confirmation of this hypothesis, looking at the lines indicated in the output:
 	
-	\paragraph{} The second vulnerability involves a cycle instead of a branch, thus does not actually represent a fertile territory for a Spectre attack.
+	\begin{lstlisting}[caption={\texttt{assembly.ll}}, numbers=none]
+968:  land.lhs.true2: 
+969:        ...
+970			%tobool3 = icmp ne %struct.aes_key_st* %2, null, !dbg !781
+971:  		br i1 %tobool3, label %if.then, label %if.else, !dbg !784
+		
+3090: for.body12:
+3091:		...
+3094:		%31 = load i8, i8* %arrayidx, align 1, !dbg !2293
+3095:		...
+3106:		store i8 %conv16, i8* %arrayidx17, align 1, !dbg !2300
+	\end{lstlisting}
+
+	As we expected, the assertion is translated into a branch statement, recognisible by the command \texttt{br}: the label \texttt{\%toobool3} is a yields the value of a comparison of the form
+	
+	\begin{lstlisting}[numbers=none, frame=none]
+	icmp <cond> <ty> <var1>, <var2> 
+	\end{lstlisting}
+	
+	where \texttt{icmp} is the command that encodes a comparison, \texttt{<cond>} is the condition code indicating the kind of comparison to perform (in this case, the code is \texttt{ne}, i.e. "not equal"), \texttt{<ty>} is the type of data we on which the comparison is performed, while \texttt{<var1>} e \texttt{<var2>} are the actual variables that will be compared. With this notions in mind, it's easy to see that \texttt{\%tobool3} yields the result of the comparison between the key and \texttt{null}; in case the result is false (meaning that the value of the key is indeed \texttt{null}), the control flows to the label \texttt{\%if.else}, where an error is thrown:
+	
+	\begin{lstlisting}[caption={\texttt{assembly.ll}}, numbers=none]
+976:  if.else:
+977:  		call void @__assert_fail(i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.7, i32 0, i32 0), i8* getelementptr inbounds ([32 x i8], [32 x i8]* @.str.1, i32 0, i32 0), i32 672, i8* getelementptr inbounds ([74 x i8], [74 x i8]* @__PRETTY_FUNCTION__.AES_encrypt, i32 0, i32 0)) #5, !dbg !781
+
+978:  		unreachable, !dbg !781 		
+	\end{lstlisting}
+	
+	Besides this, there are more conditional statement that check the validity of the variabled \texttt{in} and \texttt{out}. However, once again, it's not clear why this assertion statement is linked to the cycle shown in listing \ref{cbc128_3}.
+	
+	\paragraph{} The second vulnerability involves a cycle instead of a branch, thus does not actually represent a fertile territory for a Spectre attack, as already discussed in the previous paragraph. 
 
 	\begin{minipage}{.5\textwidth}
-		\begin{lstlisting}[caption={\texttt{aes\_core.c}}, label=aes-core4]{Name}
+		\begin{lstlisting}[caption={\texttt{aes\_core.c}}, label=aes-core4, firstnumber=432]{Name}
 for (r = 0; r < 4; r++) {
 	s[0] = s0[0*4 + r];
 	s[1] = s0[1*4 + r];
@@ -850,11 +881,12 @@ for (r = 0; r < 4; r++) {
 }
 		\end{lstlisting}
 	\end{minipage}
+	\vspace{3mm}
 
-	\paragraph{} As one can see from listing \ref{cbc128_4}, the third vulnerability is identical to the one shown in listing \ref{cbc128_2}, even though the line count is different due to small variations that occurred throughout different versions, and thus does not require further comments.
+	\paragraph{} With respect to the third vulnerability, as one can see from listing \ref{cbc128_4}, it is identical to the one shown in listing \ref{cbc128_2}, even though the line count is different due to small variations that occurred throughout different versions, and thus does not require further comments.
 
 	\begin{minipage}{.5\textwidth}
-		\begin{lstlisting}[caption={\texttt{cbc128.c}}, label=cbc128_4]
+		\begin{lstlisting}[caption={\texttt{cbc128.c}}, label=cbc128_4, firstnumber=60]
 for (n = 0; n < 16 && n < len; ++n)
 	out[n] = in[n] ^ iv[n];
 for (; n < 16; ++n)
@@ -863,6 +895,8 @@ for (; n < 16; ++n)
 	\end{minipage}
 
 	\paragraph{} The same can be said about the fourth vulnerability, which involves \texttt{memcpy.c} and is completely analogous to the one shown in \ref{memcpy}.
+	
+	\paragraph{} The tests made on the two other modes of operation didn't reveal anything new, as one can see from \ref{fig:result_ctr_v3} and \ref{fig:result_ofb_v3}: the alleged vulnerabilities are only detected in \texttt{memcpy.c} and \texttt{memset.c}, and are completely analogous to those discussed in the previous paragraph.
 
 	\begin{figure}[!ht]
 		\centering
