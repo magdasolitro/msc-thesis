@@ -48,7 +48,8 @@
 	stringstyle=\color{violet},
 	breaklines=true,
 	breakatwhitespace=true,
-	tabsize=4
+	tabsize=4,
+	frame=tlrb
 }
 
 \newcommand\defeq{\stackrel{\mathclap{\normalfont\mbox{\tiny def}}}{=}}
@@ -536,26 +537,26 @@ uint8_t foo(uint32_t x) {
 	Finally, \textsc{KLEESpectre} models the cache to check whether a sensitive address can be observed by a potential adversary at the termination of a program. As quickly mentioned above, the execution state contains also the cache state, to record what information is stored in cache at each step of the execution.
 	
 	\section{Testing the Advanced Encryption Standard (AES)}\label{sec:testing}
-	This section is the core of the thesis: here you will find a precise definition of the research question that I decided to tackle, a description of the methodology that I followed, and the discussion concerning the results I obtained.
+	This section is the core of the thesis: it contains a precise definition of the research question I decided to tackle, a description of the methodology that I followed, and the discussion concerning the results I obtained.
 	
-	As I previously mentioned at the beginning of this chapter, the goal of my work is to test the OpenSSL library that implements AES with different tools and verify the presence of vulnerabilities. More precisely, I try to answer the following questions:
+	As I previously mentioned at the beginning of this chapter, the goal of my work is to test the OpenSSL library that implements AES with different tools and verify the presence of Spectre vulnerabilities. More precisely, I try to answer the following questions:
 	\begin{enumerate}
 		\item Do FastSpec and \textsc{KLEESpectre} detect any Spectre vulnerability in the AES implementation?
 		\item Do FastSpec and \textsc{KLEESpectre} provide the same results?
-		\item Comparing the results obtained on AES in its OpenSSL v1.0.0\footnote{\url{https://github.com/openssl/openssl/tree/91bad2b09eb2ad77da8aca29f80f2d0677e75423}} implementation (last revised in 2015, before the discovering of Spectre) in its OpenSSL v3.0.0 implementation (the latest version), are there any differences? 
+		\item Comparing the results obtained on AES in its OpenSSL v1.0.0\footnote{\url{https://github.com/openssl/openssl/tree/91bad2b09eb2ad77da8aca29f80f2d0677e75423}} implementation (last revised in 2015, before the discovering of Spectre) in its OpenSSL v3.0.0\footnote{\url{https://github.com/openssl/openssl/tree/89cd17a031e022211684eb7eb41190cf1910f9fa}} implementation (the latest version), are there any differences? 
 	\end{enumerate}
 	The code and the libraries used to answer these questions are available at this GitHub repository: \url{https://github.com/magdasolitro/msc-thesis}.
 	\subsection{Testing with \textsc{KLEESpectre}}
-	Firstly, we tested the libraries with \textsc{\textsc{\textsc{KLEESpectre}}}: all I had to do was to write a brief piece of C code, where we call the functions needed to set up the AES encryption, and then we call a specific function from KLEE to declare what inputs are not known prior execution.
+	Firstly, I tested the libraries with \textsc{\textsc{\textsc{KLEESpectre}}}: all I had to do was to write a brief piece of C code, where I use the functions that set up the AES encryption, and then I call a specific function from \textsc{KLEE} to declare what inputs are not known prior execution and therefore should be abstracted.
 	
-	For example, the program shown below was used to test AES in CBC mode of operation (see Appendix \ref{appendix:aes}). The most notable variables are:
+	For example, the program shown below was used to test AES in CBC mode of operation (see Appendix \ref{appendix:aes}). The most relevant variables are:
 	\begin{itemize}
-		\item \texttt{in}, the message to encrypt. Since we are working with AES-128, the size of the string can be at most 16 characters (C uses the ASCII encoding for strings, where each character is consumes 8 bits).
+		\item \texttt{in}, the message to encrypt. Since we are working with AES-128, the size of the string can be at most 16 characters (C uses the ASCII\footnote{\url{https://www.ascii-code.com/}} encoding for strings, where each character is consumes 8 bits).
 		\item \texttt{out}, the array where the result of the encryption will be stored.
 		\item \texttt{aes\_key}, a so-called "struct", namely a complex data structure of the C language containing different fields. In this case, \texttt{aes\_key} contains two fields, one for the value of the key and one for the number of rounds.
 		\item \texttt{ivec}, the initalisation vector, which is used in many modes of operation to guarantee a certain degree of randomness in the encryption process (see Appendix \ref{appendix:aes}).
 	\end{itemize}
-	\begin{lstlisting}
+	\begin{lstlisting}[caption=\texttt{testing\_AES\_CBC.c}, label=test-aes-cbc]
 #include <stdio.h>
 #include <openssl/aes.h>
 #include <openssl/modes.h>
@@ -584,19 +585,20 @@ int main(){
 			(const AES_KEY *) &aes_key, ivec, (const int ) 1);
 }
 	\end{lstlisting}
+	\vspace{3mm}
 
-	In this program, we use a specific \textsc{KLEE} function called \texttt{klee\_make\_symbolic} to declare what input needs to be abstracted. In this case, we must choose \texttt{ivec}: this value is random and must be refreshed at every encryption, so it cannot be determined by simply scanning the source code. Plus, the adversary can carry out a Spectre attack by manipulating its value: for example, they can submit the same value multiple times, so when the CPU encounters a branch conditioned on the value of the initialisation vector, it will guess the execution a certain branch. The function takes the following parameters:
+	In this program, we use a specific \textsc{KLEE} function called \texttt{klee\_make\_symbolic()} to declare what input needs to be abstracted. In this case, I choose \texttt{ivec}: this value is random and must be refreshed at every encryption, so it cannot be determined by simply scanning the source code. Moreover, the adversary can carry out a Spectre attack by manipulating it: for example, they can submit the same value multiple times, so when the CPU encounters a branch conditioned on the initialisation vector, it will guess the execution of a certain branch. The function takes the following parameters:
 	\begin{itemize}
 		\item \texttt{\&ivec} is the address of the abstract variable;
 		\item \texttt{sizeof(ivec)} represents, clearly, its size;
-		\item \texttt{"ivec"} is the name with which \textsc{KLEESpectre} will represent the abstract input when printing the output.
+		\item \texttt{"ivec"} is the name with which \textsc{KLEESpectre} will represent the initialisation vector when printing the output. This string can be chosen at will.
 	\end{itemize}
 	After we set the symbolic value, we fill the fields of the \texttt{aes\_key} struct with OpenSSL function \texttt{AES\_set\_encrypt\_key} and perform the encryption with \texttt{AES\_cbc\_encrypt}.
 	
-	\paragraph{Testing OpenSSL v1} This paragraph shows the results obtained for AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode, testing OpenSSL v1 (more precisely, version 1.0.0). First, I present all the results produced by \textsc{KLEESpectre} and describe my first impressions on them. Then, I will go deeper and try to make sense out of unexpected results.
+	\paragraph{Testing OpenSSL v1} This paragraph shows the results obtained testing AES in three different modes of operation, namely Cipher Block Chaining (CBC), Output FeedBack (OFB), and Counter (CTR) mode, in OpenSSL v1 (more precisely, version 1.0.0). First, I present all the results produced by \textsc{KLEESpectre} and describe my first impressions on them. Then, I will go deeper and try to make sense out of unexpected results. 
+	The reproduce the results, one should run the script \texttt{test\_KLEESpectre\_v1.sh}, located in the \texttt{test\_files} directory and ensure that the files \texttt{testing\_AES\_CBC.c}, \texttt{testing\_AES\_CTR.c}, and \texttt{testing\_AES\_OFB.c} contain the line \texttt{\#include "aes\_locl.h"} instead of \texttt{\#include "aes\_local.h"}, as the name of the header changed in version 3 of OpenSSL.
 	
-	The first victim of my analysis is AES-CBC: the results are depicted in Figure \ref{fig:result_cbc_v1} and show 4 Spectre vulnerabilities. 
-	
+	\paragraph{}The first victim of my analysis is AES-CBC: the results are depicted in Figure \ref{fig:result_cbc_v1} and show 4 Spectre vulnerabilities. 
 	\begin{figure}[!h]
 		\centering
 		\includegraphics[scale=0.3]{../imgs/AES_CBC_v1.png}
@@ -604,16 +606,23 @@ int main(){
 		\caption{Results of \textsc{KLEESpectre} on AES-CBC in OpenSSL v1.}
 		\label{fig:result_cbc_v1}
 	\end{figure}
-
 	As specified in the documentation available at the repository's address, the output should be interpreted as follows:
 	\begin{itemize}
 		\item the line that starts with \texttt{KLEE:1BR} indicates the branch whose misprediction can cause data leakage;
 		\item the line that starts with \texttt{KLEE:2RS} denotes the code line loading the potentially sensitive data;
 		\item the line that starts with \texttt{KLEE:3LS} gives the code line information for leaking the sensitive data to cache state.
 	\end{itemize}
-	The next step is going through each and every vulnerability detected by \texttt{KLEESpectre} to check if the results are reasonable and the snippets regarded as "vulnerable" can potentially be exploited in a Spectre attack. The leaking branch is in \texttt{aes\_core.c}, a file that implements a set of functions used in all modes of operations of AES.
+	The next step is going through each and every vulnerability detected by \texttt{KLEESpectre} to check if the results are reasonable and the snippets regarded as "vulnerable" can actually be exploited in a Spectre attack. 
+	
+	\paragraph{} The first vulnerability is detected in \texttt{aes\_core.c}, a file that implements a set of functions used in all modes of operations of AES: listing \ref{aes-core1} shows the incriminated branch. More precisely, this branch is a part of the function \texttt{AES\_set\_encrypt\_key()}, whose job is to create a struct containing two fields:
+	\begin{itemize}
+		\item \texttt{rd\_key}, representing the value of the key;
+		\item \texttt{rounds}, which contains the number of rounds that the AES must perform. This value depends on the number of bits of the key (specified by the parameter \texttt{bits}), which can be 128, 192, or 256 (see Appendix \ref{appendix:aes}). 
+	\end{itemize}
+	The branch is conditioned on the value of \texttt{bits}, which represents the length of the key: it's plausible that the leak appears on the branch with guarding expression \texttt{bits == 128}, since we are analysing AES-128. The output of \textsc{KLEESpectre} also tells us which line loads potentially sensitive data, which in this case are lines 671 and 672. Apparently, this doesn't make much sense: those lines are located \textit{outside} the conditional branch, thus speculative execution does not involve them. In order to figure out why \textsc{KLEESpectre} gave such result, I decided to inspect the code to a lower level: when the tool is successfully executed on a file, it creates a directory containing many useful information about the computation. Among these, there is a file with extension \texttt{.ll}, which is an LLVM assembly language format. The output of \textsc{KLEESpectre} indicates the assembly instruction corresponding to the C instruction in the source code: with this information, we can track the lines that perform a dangerous loading in the corresponding assembly file, according to the tool. These lines are reported on listing \ref{asm1} (note that line numbers follow the same order provided in the output, thus they are not sequential).
+
 	\begin{minipage}{.75\textwidth}
-		\begin{lstlisting}[caption=\texttt{aes\_core.c},frame=tlrb, firstnumber=653]{Name}
+		\begin{lstlisting}[caption=\texttt{aes\_core.c}, firstnumber=653, label=aes-core1]{Name}
 if (bits == 128) {
 	while (1) {
 		temp  = rk[3];
@@ -636,17 +645,10 @@ rk[4] = GETU32(userKey + 16);
 rk[5] = GETU32(userKey + 20);
 		\end{lstlisting}
 	\end{minipage}
-
-	 More precisely, this branch is a part of the function \texttt{AES\_set\_encrypt\_key()}, whose job is to create a struct containing two fields:
-	\begin{itemize}
-		\item \texttt{rd\_key}, representing the value of the key;
-		\item \texttt{rounds}, which contains the number of rounds that the AES must perform. This value depends on the number of bits of the key (specified by the parameter \texttt{bits}), which can be 128, 192, or 256 (see Appendix \ref{appendix:aes}). 
-	\end{itemize}
-	
-	The branch is conditioned on the value of \texttt{bits}, which represents the length of the key: it's plausible that the leak appears on the branch with guarding expression \texttt{bits == 128}, since we are analysing AES-128. The output of \textsc{KLEESpectre} also tells us which line loads potentially sensitive data, which in this case is line 671 and 672. Apparently, this doesn't make much sense: those lines are located \textit{outside} the conditional branch, thus speculative execution does not involve them. In order to figure out why \textsc{KLEESpectre} gave such result, I decided to inspect the code to a lower level: when the tool is successfully executed on a file, it creates a directory containing many useful information about the computation. Among these, there is a file with extension \texttt{.ll}, which is an LLVM assembly language format. Moreover, the output of \textsc{KLEESpectre} indicates the assembly instruction corresponding to the C instruction in the source code: with this information, we can track the lines that perform a dangerous loading, according to the tool. These lines are reported on listing \ref{asm1} (note that line numbers follow the same order provided in the output, so they are not sequential).
+	\vspace{3mm}
 	
 	\lstset{numbers=none}
-	\begin{lstlisting}[caption=\texttt{assembly.ll} (for AES-CBC),frame=tlrb, label=asm1]{Name}
+	\begin{lstlisting}[caption=\texttt{assembly.ll} (for AES-CBC), label=asm1]{Name}
 311:  br i1 %cmp83, label %if.then85, label %if.end128, !dbg !225
 408:  if.end128:                                        
 432:  		%87 = load i8, i8* %arrayidx144, align 1, !dbg !283
@@ -657,22 +659,22 @@ rk[5] = GETU32(userKey + 20);
 441:  		%90 = load i8, i8* %arrayidx149, align 1, !dbg !286
 412:  		%81 = load i8, i8* %arrayidx130, align 1, !dbg !283
 	\end{lstlisting}
+	\vspace{3mm}
 	
-	By analysing this code snippet, the result provided by the tool seems more reasonable: the branch \texttt{if(bits == 128)} corresponds to line 311, which is a branch instruction, structured as follows:
+	By analysing this code snippet, we can understand more about the result provided by the tool: the branch \texttt{if(bits == 128)} corresponds to line 311, which is a branch instruction of the form:
 	
 	\begin{lstlisting}
 	br i1 <cond>, label <iftrue>, label <iffalse>
 	\end{lstlisting}
-		
-	For more information about the syntax, see the reference manual \cite{LLVMasm}. In this case, if the branch condition is false, the execution flow jumps at the label \texttt{if.end128}, on line 408, but this label is associated to all the instructions comprehended between line 409 and 469! All the instructions pointed by \texttt{KLEESpectre} are perform a data loading and fall among the instruction under the \texttt{if.end128} label, so the result provided by \textsc{KLEESpectre} looks now more reasonable. 
-	\paragraph{}The second vulnerability detected by \textsc{KLEESpectre} is also puzzling: one points at two different files, claiming that the vulnerable branch is in \texttt{cbc128.c}, while the potentially dangerous loading happens in \texttt{aes\_core.c}. One can think of a function in \texttt{cbc128.c} making an external call to a function in \texttt{aes\_core.c}, but when we open the files and look at the corresponding lines, we see that this is not the case, as reported in \ref{cbc128} and \ref{aes-core}.
+
+	For more information about the syntax, see the reference manual \cite{LLVMasm}. In this case, if the branch condition is false, the execution flow jumps at the label \texttt{if.end128}, on line 408: this label is associated to all the instructions between line 409 and 469: it's easy to notice that the instructions pointed by \texttt{KLEESpectre} in the output perform a data loading and fall among this interval. This means that the Spectre attack is carried out when the CPU makes the assumpion that \texttt{bits == 128} is \textit{false}. However, this highlights a discrepancy between the logic of source code and its translation into LLVM assembly: looking at the C code, we notice that the instructions on lines 671 and 672 will be executued regardless of the evaluation of the branch condition, as they are not placed in the \texttt{else} branch. From the assembly viewpoint, instead, there is no difference between jumping in the other branch of the conditional statement or jumping completely outside of it. For this reason, \texttt{KLEESpectre} assumes that instructions on lines 671 and 672 can be executed speculatively, while this is clearly not the case.
+	\paragraph{}The second vulnerability detected by \textsc{KLEESpectre} is also puzzling: it points at two different files, claiming that the vulnerable branch is located in \texttt{cbc128.c}, while the potentially dangerous loading happens in \texttt{aes\_core.c}. One can think of a function in \texttt{cbc128.c} making an external call to a function in \texttt{aes\_core.c}, but when we open the files and look at the corresponding lines, we see that this is not the case, as reported in listings \ref{cbc128} and \ref{aes-core2}.
 	
 	\lstset{
-		numbers=left,
-		basicstyle={\tiny\ttfamily},
+		numbers=left
 	}
-	\begin{minipage}{.45\textwidth}
-		\begin{lstlisting}[caption=\texttt{cbc128.c},frame=tlrb, firstnumber=92, label=cbc128]{Name}
+	\begin{minipage}{.7\textwidth}
+		\begin{lstlisting}[caption=\texttt{cbc128.c}, firstnumber=92, label=cbc128]{Name}
 while (len>=16) {
 	for(n=0; n<16; n+=sizeof(size_t))
 		*(size_t*)(out+n) = 
@@ -680,34 +682,39 @@ while (len>=16) {
 		...
 }
 		\end{lstlisting}
-	\end{minipage}\hfill
-	\begin{minipage}{.45\textwidth}
-		\begin{lstlisting}[caption=\texttt{aes\_core.c},frame=tlrb, firstnumber=797, label=aes-core]{Name}
+	\end{minipage}
+
+	\begin{minipage}{.5\textwidth}
+		\begin{lstlisting}[caption=\texttt{aes\_core.c}, firstnumber=797, label=aes-core2]{Name}
 s0 = GETU32(in) ^ rk[0];
 		\end{lstlisting}
 	\end{minipage}
+	\vspace{3mm}
 
-	The first thing I noticed is that the branch considered to be vulnerable is not a branch at all, but a cycle, which is not considered a source of Spectre vulnerabilities. Secondly, it's not clear what should be the connection between the \texttt{for} cycle in \texttt{cbc128.c} and the instruction in \texttt{aes\_core.c}, as there is no call to any function in \texttt{aes\_core.c}, nor there is any dependency between the data used in the two programs. Once again, we look at the assembly code in search for clearer answers: the culprit lines are depicted in \ref{asm2}.
+	The first thing I noticed is that the branch considered to be vulnerable is not a branch at all, but a cycle, which is not considered a source of Spectre vulnerabilities. Secondly, it's not clear what should be the connection between the \texttt{for} cycle in \texttt{cbc128.c} and the instruction in \texttt{aes\_core.c}, as there is no call to any function in \texttt{aes\_core.c}, nor there is any dependency between the data used in the two programs. Once again, we look at the assembly code in search for clearer answers: the culprit lines are depicted in listing \ref{asm2}.
 	
 	\lstset{
-		basicstyle={\small\ttfamily},
+		numbers=none
 	}
-	\begin{lstlisting}[caption=\texttt{assembly.ll} (for AES-CBC),frame=tlrb, label=asm2]{Name}
+	\begin{minipage}{.9\textwidth}
+	\begin{lstlisting}[caption=\texttt{assembly.ll} (for AES-CBC), label=asm2]{Name}
 2202: br i1 %cmp1, label %for.body, label %for.end, !dbg !1170
-
 825:  entry:  
 861:  		%2 = load i8, i8* %arrayidx, align 1, !dbg !506
 
 	\end{lstlisting}
+	\end{minipage}
+	\vspace{3mm}
 
-	In this case, we can only partially answer our questions: clearly, the \texttt{while} cycle is translated into a jump conditioned on \texttt{cmp1}, which corresponds to an assembly translation of \texttt{len>=16}. If the condition is satisfied, it jumps to the label \texttt{for.body} , otherwise it jumps at \texttt{for.end}. However, none of these blocks contain any reference to the label \texttt{entry}, where instead we find the instruction that, according to \texttt{KLEESpectre}, performs the dangerous loading. Appartently, \texttt{KLEESpectre} treats all branching instructions \texttt{br} equally, regardless of whether these instruction encode an actual branch or a cycle. Despite this, there is still no reason why it detected the dangerous loading in an instruction that has nothing to do with the incriminated branch. 
+	In this case, we can only partially answer our questions: clearly, the \texttt{while} cycle is translated into a jump conditioned on \texttt{cmp1}, a label containing the assembly translation of \texttt{len>=16}. If the condition is satisfied, it program counter jumps to the label \texttt{for.body}, otherwise it jumps at \texttt{for.end}. However, none of these blocks contain any reference to the label \texttt{entry}, where instead we find the instruction that, according to \texttt{KLEESpectre}, performs the dangerous loading. Appartently, \texttt{KLEESpectre} treats all branching instructions \texttt{br} equally, regardless of whether these instruction encode an actual branch or a cycle. Despite this, there is still no reason why it detected the dangerous loading in an instruction that has nothing to do with the incriminated branch. 
 	\paragraph{}The third vulnerability concerns another piece of code in \texttt{cbc128.c}, specifically in the function \texttt{CRYPTO\_cbc128\_encrypt}, and is shown in \ref{cbc128_2}.
 	
 	\lstset{
-		basicstyle={\small\ttfamily},
+		numbers=left,
+		basicstyle={\small\ttfamily}
 	}
 	\begin{minipage}{.45\textwidth}
-		\begin{lstlisting}[caption=\texttt{cbc128.c}, frame=tlrb, firstnumber=105, label=cbc128_2]{Name}
+		\begin{lstlisting}[caption=\texttt{cbc128.c}, firstnumber=105, label=cbc128_2]{Name}
 for(n=0; n<16 && n<len; ++n)
 	out[n] = in[n] ^ iv[n];
 for(; n<16; ++n)
@@ -715,13 +722,40 @@ for(; n<16; ++n)
 (*block)(out, out, key);
 		\end{lstlisting}
 	\end{minipage}
+	\vspace{3mm}
 	
-	Also in this case, the result is inconsistent: the vulnerable branch is supposed to be the \texttt{for} cycle on line 107, while the dangerous loading seems to be even on the prevous line, which is not reasonable, and on the line immediately after.
+	The vulnerable branch is supposed to be the \texttt{for} cycle on line 107, while the dangerous loading seems to be (surprisingly) even on the prevous line, which seems absurd, and on line 108. The reason why \textsc{KLEESpectre} confuses a cycle with a branch should be clear at this point, but I inspect the corresponding assembly code to figure out why an the instruction on line 106 is held responsible for a dangerous loading.
 	
-	The last vulnerability detected by \textsc{KLEESpectre} resides in the file \texttt{memcpy.c}, an alternative implementation of the function \texttt{memcpy(void *dst, const void *src, size\_t len)} which is part of the C standard library: its job is to copy a data of length \texttt{len}, stored at the address \texttt{*srcaddr}, to the address \texttt{*destaddr}. As the implementation is very short, we report in \ref{memcpy} the full code. Once again, the vulnerability seems to involve a cycle, on line 16, instead of a conditional branch, as we would expect.
+	\lstset{
+		numbers=none
+	}
+	\begin{lstlisting}[caption=\texttt{assembly.ll}]
+2303: for.cond19:                
+2304: 		%37 = load i64, i64* %n, align 8, !dbg !1228
+2305:		%cmp20 = icmp ult i64 %37, 16, !dbg !1231                       
+2306: 		br i1 %cmp20, label %for.body22, label %for.end27, !dbg !1232
+
+2308: for.body22: 
+2309:		...
+2316:		store i8 %40, i8* %arrayidx24, align 1, !dbg !12
+2317:		...
+
+2275: for.body11: 
+2276:		...
+2279: 		%30 = load i8, i8* %arrayidx, align 1, !dbg !1215
+2291: 		store i8 %conv15, i8* %arrayidx16, align 1, !dbg !1222
+	\end{lstlisting}
+	\vspace{3mm}
 	
+	The connection between label \texttt{for.cond19} and \texttt{for.body22} is clear: the former evaluates the branch condition and, based on that, decides the direction of the jump, while the latter implements the body of the cycle. However, by doing a recursive search on the labels called in both block, none of these conducts to \texttt{for.body11} (as we expected). Therefore, even in this case, the reason why \textsc{KLEESpectre} behaved in this way remains unclear.
+	
+	The last vulnerability detected by \textsc{KLEESpectre} resides in the file \texttt{memcpy.c}, an alternative implementation of the function \texttt{memcpy(void *dst, const void *src, size\_t len)} which is part of the C standard library: its job is to copy a data of length \texttt{len}, stored at the address \texttt{*srcaddr}, to the address \texttt{*destaddr}. As the implementation is very short, we report in \ref{memcpy} the full code. Once again, the vulnerability seems to involve a cycle, on line 16, instead of a conditional branch.
+	
+	\lstset{
+		numbers=left
+	}
 	\begin{minipage}{.9\textwidth}
-	\begin{lstlisting}[caption=\texttt{memcpy.c}, frame=tlrb, firstnumber=10, label=memcpy]{Name}
+	\begin{lstlisting}[caption=\texttt{memcpy.c}, firstnumber=10, label=memcpy]{Name}
 #include <stdlib.h>
 
 void *memcpy(void *destaddr, void const *srcaddr, size_t len) {
@@ -734,11 +768,12 @@ void *memcpy(void *destaddr, void const *srcaddr, size_t len) {
 }
 	\end{lstlisting}
 	\end{minipage}	
+	\vspace{3mm}
+		
+	I tried to run \textsc{KLEESpectre} also on two more files, \texttt{testing\_AES\_CTR.c} and \texttt{testing\_AES\_OFB.c}, to analyse AES-CTR and AES-OFB respectively: the output is shown in Figures \ref{fig:result_ctr_v1} and \ref{fig:result_ofb_v1}. However, only one new vulnerability is found, contained in \texttt{memset.c}: this file re-implements \texttt{memset()}, a function of the C standard library, whose job is to copy the integer \texttt{s} to the first \texttt{count} characters of the array \texttt{*dst}. Listing \ref{memset} shows the full code: the vulnerability is found in a very similar pattern to the one in \texttt{memcpy}, thus it's not necessary to make further comments.
 
-	I tried to run \textsc{KLEESpectre} also on two more files, \texttt{testing\_AES\_CTR.c} and \texttt{testing\_AES\_OFB.c}, to analyse AES-CTR and AES-OFB respectively: the output is shown in Figures \ref{fig:result_ctr_v1} and \ref{fig:result_ofb_v1}. However, only one new vulnerability is found, contained in \texttt{memset.c}: this file re-implements \texttt{memset()}, a function of the C standard library, whose job is to copy the integer \texttt{s} to the first \texttt{count} characters of the array \texttt{*dst}. Listing \ref{memset} shows the full code.
-	
 	\begin{minipage}{.75\textwidth}
-		\begin{lstlisting}[caption=\texttt{memcpy.c}, frame=tlrb, firstnumber=10, label=memset]{Name}
+		\begin{lstlisting}[caption=\texttt{memcpy.c}, firstnumber=10, label=memset]{Name}
 #include <stdlib.h>
 
 void *memset(void *dst, int s, size_t count) {
@@ -749,9 +784,7 @@ void *memset(void *dst, int s, size_t count) {
 }
 		\end{lstlisting}
 	\end{minipage}
-
-	The vulnerability is very similar to the one in \texttt{memcpy}, as it involves a cycle and the instruction in its body.
-	
+	\vspace{3mm}
 	
 	\begin{figure}[!ht]
 		\centering
@@ -769,7 +802,8 @@ void *memset(void *dst, int s, size_t count) {
 		\label{fig:result_ofb_v1}
 	\end{figure}
 
-	\paragraph{Testing OpenSSL v3} In this paragraph, I repeat the same tests on OpenSSL v3 (more precisely, on version 3.0.0), to see if something has changed after the discovery of Spectre. In order to reproduce these tests, one should run \texttt{test\_KLEESpectre\_v3.sh} and substituting in every testing file the line \texttt{\#include "aes\_locl.h"} with \texttt{\#include "aes\_local.h"}, as the name of the header changed throughout the versions. Figures \ref{fig:result_cbc_v3}, \ref{fig:result_ctr_v3}, and \ref{fig:result_ofb_v3} show the results obtained.
+	\paragraph{Testing OpenSSL v3} In this paragraph, I repeat the same tests on OpenSSL v3 (more precisely, on version 3.0.0), to see if something has changed after the discovery of Spectre. In order to reproduce these tests, one should run \texttt{test\_KLEESpectre\_v3.sh} and eventually substituting in every testing file the line \texttt{\#include "aes\_locl.h"} with \texttt{\#include "aes\_local.h"}. Figures \ref{fig:result_cbc_v3}, \ref{fig:result_ctr_v3}, and \ref{fig:result_ofb_v3} show the results obtained. Let's start with AES-CBC: the count of alleged Spectre vulnerabilities is still 4, but most of them are different with respect to the previous tests.
+	
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[scale=0.35]{../imgs/AES_CBC_v3.png}
@@ -777,7 +811,59 @@ void *memset(void *dst, int s, size_t count) {
 		\caption{Results of \textsc{KLEESpectre} on AES-CBC in OpenSSL v3.}
 		\label{fig:result_cbc_v3}
 	\end{figure}
+
+	The first vulnerability involges once again two different files, \texttt{aes\_core.c} and \texttt{cbc128.c}, and points at the code snippets shown in listings \ref{aes-core3} and \ref{cbc128_3} respectively.
 	
+	\begin{minipage}{.9\textwidth}
+		\begin{lstlisting}[caption={\texttt{aes\_core.c}}, label=aes-core3]
+void AES_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key){
+	const u64 *rk;
+		
+	assert(in && out && key);
+	rk = (u64*)key->rd_key;
+		
+	Cipher(in, out, rk, key->rounds);
+}
+		\end{lstlisting}
+	\end{minipage}
+	
+	\begin{minipage}{.7\textwidth}
+\begin{lstlisting}[caption={\texttt{cbc128.c}}, label=cbc128_3]{Name}
+for (n = 0; n < 16 && n < len; ++n)
+	out[n] = in[n] ^ iv[n];
+\end{lstlisting}
+	\end{minipage}
+	\vspace{3mm}
+	
+	Once again, the vulnerability concerns two different files, without any explicit call between each other. 
+	
+	\paragraph{} The second vulnerability involves a cycle instead of a branch, thus does not actually represent a fertile territory for a Spectre attack.
+
+	\begin{minipage}{.5\textwidth}
+		\begin{lstlisting}[caption={\texttt{aes\_core.c}}, label=aes-core4]{Name}
+for (r = 0; r < 4; r++) {
+	s[0] = s0[0*4 + r];
+	s[1] = s0[1*4 + r];
+	s[2] = s0[2*4 + r];
+	s[3] = s0[3*4 + r];
+	...
+}
+		\end{lstlisting}
+	\end{minipage}
+
+	\paragraph{} As one can see from listing \ref{cbc128_4}, the third vulnerability is identical to the one shown in listing \ref{cbc128_2}, even though the line count is different due to small variations that occurred throughout different versions, and thus does not require further comments.
+
+	\begin{minipage}{.5\textwidth}
+		\begin{lstlisting}[caption={\texttt{cbc128.c}}, label=cbc128_4]
+for (n = 0; n < 16 && n < len; ++n)
+	out[n] = in[n] ^ iv[n];
+for (; n < 16; ++n)
+	out[n] = iv[n];
+		\end{lstlisting}
+	\end{minipage}
+
+	\paragraph{} The same can be said about the fourth vulnerability, which involves \texttt{memcpy.c} and is completely analogous to the one shown in \ref{memcpy}.
+
 	\begin{figure}[!ht]
 		\centering
 		\includegraphics[scale=0.35]{../imgs/AES_CTR_v3.png}
@@ -793,6 +879,8 @@ void *memset(void *dst, int s, size_t count) {
 		\caption{Results of \textsc{KLEESpectre} on AES-OFB in OpenSSL v3.}
 		\label{fig:result_ofb_v3}
 	\end{figure}
+
+
 
 	\subsection{Testing with FastSpec}
 	The second part of this thesis concerns testing AES in different modes of operation with FastSpec.
