@@ -316,7 +316,7 @@ square-and-multiply(M, e, N){
 	
 	\section{Spectre variants}\label{sec:spectre-var}
 	As mentioned at the beginning of this chapter, the term "Spectre" on itself does not identify a single attack, but a \textit{family} of attacks, all united by the same common denominator: they maliciously influence the speculative execution of a program to exfiltrate confidential information. Different version of Spectre can be carried out through the exploitation of different microarchitectural behaviours. The purpose of this section is to present the four main variants of Spectre, describing what vulnerability they take advantage of and in how they differ from each other.
-	\subsection{Spectre-PHT (Pattern History Table)}
+	\subsection{Spectre-PHT (Pattern History Table)}\label{sec:spectre-pht}
 	Spectre-PHT \cite{Kocher2019}\cite{Canella2019}\cite{Evtyushkin2018}, also known as variant 1 or Bound Check Bypass, was one the first attack of the Spectre family to be discovered. As the name suggests, this version targets the Pattern History Table (PHT) to trigger a branch misprection.
 	\paragraph{Pattern History Table (PHT)} The Pattern History Table \cite{Fog2021} is a data structure used by the branch predictor to guess the outcome of a conditional branch before the value of the guard is fully determined. Intuitively, during the execution of a program, the CPU keeps track of the last $N$ outcomes of a conditional branch in the \textit{branch history register}. The outcomes are encoded as a bitstring of length $N$, where a 1 indicates an execution where the guard expression evaluated to true, while a 0 represents the opposite case. The content of the branch history buffer is used to point at a specific entry of the Pattern History Table. The PHT contains $2^N$ entries, i.e. as many entries as all the possible sequences of $N$ outcomes; each entry in
 	the contains a 2-bit saturating counter, namely a finite-state automaton that decides the probability of a certain outcome. The branch history register is used for choosing which of the four counters to use.
@@ -337,7 +337,7 @@ if (x < len(array)) {
 }
 	\end{lstlisting}  
 	Just as the described above, the attacker can "train" the CPU to guess a certain outcome of the branching instruction and then exploits the misprection caused by the provision of an invalid value of \texttt{x} to write on a protected location.
-	\subsection{Spectre-BTB (Branch Target Buffer)}
+	\subsection{Spectre-BTB (Branch Target Buffer)}\label{sec:spectre-btb}
 	Spectre-BTB \cite{Kocher2019} \cite{Canella2019}, also known as variant 2 or Branch Target Injection, affects the Branch Target Buffer to deflect the transient execution to a mispredicted branch target. This attack was discovered simultaneously to variant 1 and exploits a similar mechanism.
 	
 	\paragraph{Branch Target Buffer (BTB)} The Branch Target Buffer \cite{Perleberg1989} is a data structure located in the cache, that stores a set of guesses for the target addresses of all jumps, both conditional and unconditional. The first time a jump instruction is executed, the target address that is reached gets stored in the BTB, so no speculation is made for the first jump. When the jump is executed again, a pointer to the BTB indicates the target address of the previous execution, allowing the CPU to fetch the  predicted instruction into the pipeline, but the true target will not be calculated until the jump reaches the execution stage. Once the jump is actually performed,the address predicted with the BTB is compared with the actual address taken by the jump: if they don't match, the guess was wrong, so the results are rolled back and the previous target address is replaced by the current one in the BTB.
@@ -345,7 +345,7 @@ if (x < len(array)) {
 	
 	However, there is a significant difference between Spectre-PHT and Spectre-BTB: in the former, the execution flows along a restricted mispredicted path, i.e. the attacker can influence the branch predictor only in the choice of the branch to execute. The latter, instead, allows redirecting the control flow to an arbitrary destination, so that the execution can continue at a specific point chosen by the adversary. This location corresponds to a \textit{Spectre gadget}, namely "a code fragment whose speculative execution will transfer the victim’s sensitive information into a covert channel"\cite{Kocher2019}.
 	
-	\subsection{Spectre-RSB (Return Stack Buffer)}
+	\subsection{Spectre-RSB (Return Stack Buffer)}\label{sec:spectre-rsb}
 	Spectre-RSB \cite{Maisuradze2018} \cite{Koruyeh2018} \cite{Canella2019}, also known as ret2spec, is a variant that exploits a data structure called Return Stack Buffer.
 	
 	\paragraph{Return Stack Buffer (RSB)}The Return Stack Buffer is a microarchitectural buffer used to predict return address of a function: whenever a call instruction is reached during the execution, the prediction of the return address is pushed on top of a stack. When the execution reaches the \texttt{return} point, the top entry of the stack is used to speculate about the return address location quickly. Meanwhile, the actual return address is fetched, possibly from the main memory, therefore it will be available after only after hundreds of clock cycles. Once the real return address is loaded, it gets compared with the address that was fetched from the RSB: if they match, all the result computed until that point can be committed and the overall execution time gains in speed.
@@ -985,6 +985,16 @@ for (; n < 16; ++n)
 		\label{fig:idx}
 	\end{figure}
 
+	These results are hard to interpret: FastSpec only points at fragments of Assembly language that may be vulnerable to Spectre, but without a reference to the source code, figuring out whether these instructions present at least the pattern of a Spectre gadget or not is definitely a challenge. One way around this problem would be disassembling the code, namely applying an algorithm that performs the inverse transformation of the assembler: in this way, we could obtain the high-level code that translates to that Assembly snippet. However, in this case a straightforward disassembly is not possible, as some tokens have been substituted with special markers (\texttt{<label>}, \texttt{<imm>}, \texttt{<UNK>}). If we give up the idea of disassembling the code, we can simply try to analyse the results as they are, comparing them with the gadgets published in \cite{Kocher2018}, where they are listed both in C and in Assembly.
+	
+	As mentioned in \cite{Tol2021}, the version of FastSpec that I used is able to recognise only Spectre-PHT (aka Spectre v1) vulnerabilities. To detect more variants, one should accomplish the following steps:
+	\begin{enumerate}
+		\item modify the mutational fuzzing algorithm to create gadgets of a specific variant;
+		\item re-train SpectreGAN on the dataset generated in the previous point;
+		\item re-train FastSpec on the new dataset to recognise that variant.
+	\end{enumerate}
+	Unfortunately, performing all these tasks for infeasible, not only because it would have required a great amount of time (GANs are known for being extremely slow to train), but also due to the lack of an appropriate architectural support. For this reason, the only vulnerability we should look for in the incriminated snippets is Spectre-PHT.
+		
 	\begin{minipage}{.45\textwidth}
 		\begin{lstlisting}[caption={Window 369-379}]
 push %rdi
@@ -1015,7 +1025,7 @@ mov %rsp, %rbp
 mov %rdi, <imm>(%rbp)
 mov %rsi, <imm>(%rbp)
 mov %rdx , <imm>(%rbp)
-mov <imm> (%rbp), %rax
+mov <imm>(%rbp), %rax
 		\end{lstlisting}
 	\end{minipage}
 
@@ -1090,9 +1100,9 @@ sub <imm>, %rsp
 add <imm>, %rsp
 	\end{lstlisting}
 \end{minipage}
-
-
-
+	\vspace{3mm}
+	
+	As described in Section \ref{sec:spectre-pht}, a Spectre-PHT attack needs a conditional branch to be carried out: this translates into a jump instruction in Assembly.
 	\subsection{Considerations about the results}
 	
 	\chapter{Conclusions}
@@ -1165,7 +1175,7 @@ add <imm>, %rsp
 	\]
 	where $V(D,G)$ represents the value function.
 	
-	The last equation makes it clear why this style of training is called \textit{adversarial}: while the Generator tries to minimise a function, the Discriminator tries to maximise it, thus the two networks have opposite goals. %(maybe explain better..?)
+	The last equation makes it clear why this style of training is called \textit{adversarial}: while the Generator tries to minimise a function, the Discriminator tries to maximise it, thus the two networks have opposite goals.
 	
 	\section{Bidirectional Encoder Representations from Transformers (BERT)}
 	BERT \cite{Devlin2018} is a deep learning technique for Natural Language Processing (NLP) proposed by Google in 2018. The goal of this framework is to "learn a language" by understanding of how words fit into different contexts. It's interesting to reflect upon how this mechanism resembles the way non-native speakers learn the meaning of particular words in a new language: it is well known that certain expressions don't have a faithful translation in other languages. For this reason, non-native speakers learn what these words stand for simply by observing in what context they are used and what emotional characterisation they are accompanied by. A similar idea applies also to BERT, that uses transformers (described in the next section) to accomplish this task.
