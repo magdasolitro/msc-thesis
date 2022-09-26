@@ -1,17 +1,18 @@
+... %rdi
 push %rdi
 mov %rax , %rdi
-callq <label> <imm>, %rsp           # call to function
-nop                                 # no-operation
-leaveq                              # high-level procedure exit
+callq <label> <imm> , %rsp
+nop
+leaveq
 retq <UNK>
 push %rbp
-mov %rsp, %rbp
-mov %rdi, <imm> (%rbp)
-mov %esi, <imm> (%rbp)
-mov %rdx, <imm> (%rbp)
-movl <imm>, <imm> (%rbp)
-cmpq <imm>, <imm> (%rbp)
-je cmpq <imm>
+mov %rsp , %rbp
+mov %rdi , <imm> ( %rbp )
+mov %esi , <imm> ( %rbp )
+mov %rdx , <imm> ( %rbp )
+movl <imm> , <imm> ( %rbp )
+cmpq <imm> , <imm> ( %rbp )
+je cmpq <imm> ...
 
 
 mov <imm> (%rbp), %edx

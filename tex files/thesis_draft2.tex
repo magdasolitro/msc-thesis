@@ -154,7 +154,7 @@
 	
 	For the definition of completeness, we stick to the same notation.
 	\begin{defn}[Completeness]
-		We say that a program \texttt{analyse} is \textit{complete} with respect to $\mathcal{P}$ if the following condition is satisfied:
+		We say that a program \texttt{analyse} is \textbf{complete} with respect to $\mathcal{P}$ if the following condition is satisfied:
 		\[
 		\forall p \in \mathcal{L} \st p \text{ satisfies } \mathcal{P} \Longrightarrow \text{\texttt{analyse}}(p) = \text{\textbf{true}} 
 		\]
@@ -398,11 +398,13 @@ cache = array[value];		// look-up
 	
 	\textit{Formal verification} consists in checking whether a program implements a given specification, i.e. the program is functionally correct. \textit{Formal analysis}, on the other hand, is used to verify whether the code satisfies certain properties, e.g. specific security guarantees. In our case, the security property that we want to target is the vulnerability against Spectre-like attacks. 
 	
-	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework. On the other hand we have \textsc{\textsc{KLEE}Spectre} \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. The core of this work consists in testing the security of symmetric ciphers in OpenSSL\footnote{Official website: \url{https://www.openssl.org/}}, a popular software library used to ensure secure communication over the network. 
+	This work aims at comparing two different tools: on one hand we have FastSpec \cite{Tol2021}, a recent tool that uses deep learning techniques not only to detect Spectre, but also to generate new gadgets using a GAN-based framework. On the other hand we have \textsc{\textsc{KLEE}Spectre} \cite{Wang2020}, a tool that employs symbolic execution extended with cache modelling and speculative execution to detect Spectre vulnerabilities in the code. 
 	
-	As specified in \cite{Tol2021}, FastSpec was already used to test OpenSSL v3.0.0 on public-key algorithms and procedures for digital signatures, namely RSA, EDCSA and DSA. Our work targets one specific symmetric-key cipher, AES (Advanced Encryption Standard, see Appendix \ref{appendix:aes}), in different modes of operation. 
+	These tools were selected for various reasons: FastSpec is currently the only tool that successfully employs deep learning techniques to detect Spectre. Moreover, based on its reference paper, it seems able to deliver encouraging results, reaching a very high accuracy in detecting Spectre gadgets in real-world cryptographic libraries. However, this tool hasn't been thoroughly tested in other contexts yet, so it would be interesting to see how it performs on different benchmarks (?). \textsc{KLEESpectre}, instead, is considered to be a state-of-the-art tool. Compared to other tools, such as Pitchfork or \textsc{Binsec/Haunted} \cite{Daniel2021}, that inspect the binary code, \text{KLEESpectre} examines LLVM bytecode, which gives it a performance advantage. Furthermore, \texttt{KLEESpectre} is relatively easy to use: given a C program, it's sufficient to call determined \texttt{KLEE} functions that allow us to specify what inputs should be considered abstract during the symbolic execution. \texttt{KLEESpectre} also employes both symbolic execution and taint analysis, two of the most popular approaches used to detect Spectre.
 	
-	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on FastSpec and \textsc{KLEESpectre} respectively, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and \textsc{KLEESpectre}, and we conclude with Section ...., where we make some final considerations about the results we obtained. 
+	The core of this work consists in testing the security of symmetric ciphers in OpenSSL\footnote{Official website: \url{https://www.openssl.org/}}, a popular software library used to ensure secure communication over the network. The reasons to target OpenSSL are multiple: first of all, FastSpec has already been used to test OpenSSL v3.0.0 on public-key algorithms and procedures for digital signatures, namely RSA, EDCSA and DSA, with good results. Moreover, OpenSSL libraries are entirely written in C, which makes them the perfect victims for \textsc{KLEESpectre}. For my thesis, I decided to focus OpenSSL's implementation of AES (Advanced Encryption Standard, see Appendix \ref{appendix:aes}), a specific symmetric-key cipher, in different modes of operation. 
+	
+	The rest of the chapter is organised as follows: Section \ref{sec:fastspec} and \ref{sec:kleespectre} provide an overview on FastSpec and \textsc{KLEESpectre} respectively, describing their main features and analysis strategies. Then we proceed with Section \ref{sec:testing}, where we present the experimental results obtained by testing the OpenSSL functions both with FastSpec and \textsc{KLEESpectre}, and we conclude with Section \ref{conclusions}, where we make some final considerations about the results we obtained. 
 
 	\section{FastSpec}\label{sec:fastspec}
 	As mentioned at the beginning of the chapter, FastSpec was proposed in 2021 in \cite{Tol2021} and so far it represents the only analysis tool that leverges on deep learning to detect Spectre. All the essential notions on deep learning that are needed to understand how the tool works can be found in Appendix \ref{appendix:dl}. The GitHub repository of this tool can be found at \url{https://github.com/vernamlab/FastSpec}. 
@@ -431,8 +433,7 @@ cache = array[value];		// look-up
 		\label{fig:emb_vec}
 	\end{figure}
 	
-	\paragraph{Fine-tuning} In this case, the fine-tuning phase corresponds to a supervised sequence classification: FastSpec needs to learn the conceptual differences between Spectre gadgets and general-purpose functions through labeled pieces. More precisely, the former are labeled with a 0, while the latter are labeled with a 1, and FastSpec is trained to distinguish between the two.
-	\paragraph{} Concretely, FastSpec is trained on a dataset made by a combination of gadgets generated wiht SpectreGAN and disassebled Linux libraries, for a total of 107 million lines of Assembly code. Some minor modifications are made to the code to reduce the vocabulary size: for example, similar tokens are merged together, while all labels, immediate values and out-of-vocabulary tokens are replaced with \texttt{<label>}, \texttt{<imm>} and \texttt{<UNK>}, respectively.
+	\paragraph{Fine-tuning} In this case, the fine-tuning phase corresponds to a supervised sequence classification: FastSpec needs to learn the conceptual differences between Spectre gadgets and general-purpose functions through labeled pieces. More precisely, the former are labeled with a 0, while the latter are labeled with a 1, and FastSpec is trained to distinguish between the two. Concretely, FastSpec is trained on a dataset made by a combination of gadgets generated with SpectreGAN and disassembled Linux libraries, for a total of 107 million lines of Assembly code. Some minor modifications are made to the code to reduce the vocabulary size: for example, similar tokens are merged together, while all labels, immediate values and out-of-vocabulary tokens are replaced with \texttt{<label>}, \texttt{<imm>} and \texttt{<UNK>}, respectively.
 	
 	The evaluation of the tool gave promising results: as the paper reports, they "obtained 1.3 million true positives and 110 false positives (99.9\% precision rate) in the test dataset, demonstrating the high performance of FastSpec" and they "only have 55 false negatives (99.9\% recall rate)".
 	\begin{comment}
@@ -667,8 +668,36 @@ rk[5] = GETU32(userKey + 20);
 	br i1 <cond>, label <iftrue>, label <iffalse>
 	\end{lstlisting}
 
-	For more information about the syntax, see the reference manual \cite{LLVMasm}. In this case, if the branch condition is false, the execution flow jumps at the label \texttt{if.end128}, on line 408: this label is associated to all the instructions between line 409 and 469: it's easy to notice that the instructions pointed by \texttt{KLEESpectre} in the output perform a data loading and fall among this interval. This means that the Spectre attack is carried out when the CPU makes the assumpion that \texttt{bits == 128} is \textit{false}. However, this highlights a discrepancy between the logic of source code and its translation into LLVM assembly: looking at the C code, we notice that the instructions on lines 671 and 672 will be executued regardless of the evaluation of the branch condition, as they are not placed in the \texttt{else} branch. From the assembly viewpoint, instead, there is no difference between jumping in the other branch of the conditional statement or jumping completely outside of it. For this reason, \texttt{KLEESpectre} assumes that instructions on lines 671 and 672 can be executed speculatively, while this is clearly not the case.
-	\paragraph{}The second vulnerability detected by \textsc{KLEESpectre} is also puzzling: it points at two different files, claiming that the vulnerable branch is located in \texttt{cbc128.c}, while the potentially dangerous loading happens in \texttt{aes\_core.c}. One can think of a function in \texttt{cbc128.c} making an external call to a function in \texttt{aes\_core.c}, but when we open the files and look at the corresponding lines, we see that this is not the case, as reported in listings \ref{cbc128} and \ref{aes-core2}.
+	For more information about the syntax, see the reference manual \cite{LLVMasm}. In this case, if the branch condition is false, the execution flow jumps at the label \texttt{if.end128}, on line 408: this label is associated to all the instructions between line 409 and 469: it's easy to notice that the instructions pointed by \texttt{KLEESpectre} in the output perform a data loading and fall among this interval. This means that the Spectre attack is carried out when the CPU makes the assumpion that \texttt{bits == 128} is \textit{false}. 
+	
+	The alleged Spectre gadget is placed in the function \texttt{AES\_set\_encrypt\_key()}. The sequence of branches are structured as follows:
+	
+	\begin{lstlisting}[numbers=left]
+int AES_set_encrypt_key(<parameters>) {
+	...
+	if(bits==128){
+		...
+		if(< computation completed >){ return 0; }	// THE FUNCTION RETURNS
+	}
+	instr1;
+	instr2;
+	if(bits==192){
+		...
+		if(< computation completed >){ return 0; }
+	}
+	instr3;
+	instr4;
+	if(bits==256){
+		...
+		if(< computation completed >){ return 0; }
+	}
+	instr5;
+	instr6;
+}
+	\end{lstlisting}
+	
+	Therefore, in case of misprediction over the first branch, instrunctions \texttt{instr1} and \texttt{instr2}, which in this case correspond to the instruction on line 671 and 672 in \texttt{aes\_core.c}, are executed speculatively. Those instructions use the value \texttt{userKey}, namely the value of the secret key in plaintext, applying the function \texttt{GETU32()} (defined in \texttt{aes\_local.h}) on it. Since the function is invertible, it would be possible for an attacker to read the result of the computation from the cache and retrieve the value of \texttt{userKey}.
+	\paragraph{}The second vulnerability detected by \textsc{KLEESpectre} is puzzling: it points at two different files, claiming that the vulnerable branch is located in \texttt{cbc128.c}, while the potentially dangerous loading happens in \texttt{aes\_core.c}. One can think of a function in \texttt{cbc128.c} making an external call to a function in \texttt{aes\_core.c}, but when we open the files and look at the corresponding lines, we see that this is not the case, as reported in listings \ref{cbc128} and \ref{aes-core2}.
 	
 	\lstset{
 		numbers=left
@@ -748,8 +777,7 @@ for(; n<16; ++n)
 	\vspace{3mm}
 	
 	The connection between label \texttt{for.cond19} and \texttt{for.body22} is clear: the former evaluates the branch condition and, based on that, decides the direction of the jump, while the latter implements the body of the cycle. However, by doing a recursive search on the labels called in both block, none of these conducts to \texttt{for.body11} (as we expected). Therefore, even in this case, the reason why \textsc{KLEESpectre} behaved in this way remains unclear.
-	
-	The last vulnerability detected by \textsc{KLEESpectre} resides in the file \texttt{memcpy.c}, an alternative implementation of the function \texttt{memcpy(void *dst, const void *src, size\_t len)} which is part of the C standard library: its job is to copy a data of length \texttt{len}, stored at the address \texttt{*srcaddr}, to the address \texttt{*destaddr}. As the implementation is very short, we report in \ref{memcpy} the full code. Once again, the vulnerability seems to involve a cycle, on line 16, instead of a conditional branch.
+	\paragraph{}The last vulnerability detected by \textsc{KLEESpectre} resides in the file \texttt{memcpy.c}, an alternative implementation of the function \texttt{memcpy(void *dst, const void *src, size\_t len)} which is part of the C standard library: its job is to copy a data of length \texttt{len}, stored at the address \texttt{*srcaddr}, to the address \texttt{*destaddr}. As the implementation is very short, we report in \ref{memcpy} the full code. Once again, the vulnerability seems to involve a cycle, on line 16, instead of a conditional branch.
 	
 	\lstset{
 		numbers=left
@@ -915,8 +943,7 @@ for (; n < 16; ++n)
 	\end{figure}
 
 	\subsection{Testing with FastSpec}
-	The second part of this thesis concerns testing AES in different modes of operation with FastSpec. The tests were carried out on three files: \texttt{testing\_AES\_CBC\_nosymbolic.c}, \texttt{testing\_AES\_CTR\_nosymbolic.c}, and \texttt{testing\_AES\_OFB\_nosymbolic.c}: all of them are very similar to those used for the previous testing phase, except for the fact that they don't contain calls to \textsc{KLEESpectre}'s functions. To run FastSpec, I created the script \texttt{test\_FastSpec.sh}, that compiles all the three files and libraries in an object file (with extension \texttt{.o}). The file is then converted to Assembly (AT\&T syntax), but before being processed all labels, immediate values and out-of-vocabulary tokens are substituted with 
-	\texttt{<label>}, \texttt{<imm>}, and \texttt{<UNK>}, respectively. As mentioned in Section \ref{sec:fastspec}, the analysis is performed with a "sliding window" approach: we start from the beginning of the file, we fix a size for the set of tokens that we want to inspect and we run FastSpec on it. The result is a probability value ("confidence"), that expresses the likelihood that the set of token is vulnerable to Spectre, while the size of the window is set to 80 tokens, since "FastSpec achieves the highest performance to detect functions with Spectre-V1 vulnerability when the window size is set to 80 tokens" \cite{Tol2021}. By sliding the window of one token for each test, we can generate a plot that shows how the likelihood of being vulnerable changes throughout the code. 
+	The second part of this thesis concerns testing AES in different modes of operation with FastSpec. The tests were carried out on three files: \texttt{testing\_AES\_CBC\_nosymbolic.c}, \texttt{testing\_AES\_CTR\_nosymbolic.c}, and \texttt{testing\_AES\_OFB\_nosymbolic.c}: all these filea are almost identical to those used for the previous testing phase, except for the fact that they don't contain calls to \textsc{KLEESpectre}'s functions. To run FastSpec, I created the script \texttt{test\_FastSpec.sh}, that compiles all the three files and libraries in an object file (with extension \texttt{.o}). The file is then converted to Assembly (AT\&T syntax), but before being processed, all labels, immediate values and out-of-vocabulary tokens are substituted with \texttt{<label>}, \texttt{<imm>}, and \texttt{<UNK>}, respectively. As mentioned in Section \ref{sec:fastspec}, once we have the Assembly code with reduced vocabulary for all the fiels, the analysis is performed with a "sliding window" approach: we fix a size for the set of tokens that we want to process together, then we start from the beginning of the file and we FastSpec on this set of tokens. The result is a probability value ("confidence") that expresses the likelihood that the code fragment represented by those tokens is vulnerable to Spectre. As mentioned in \cite{Tol2021}, "FastSpec achieves the highest performance to detect functions with Spectre-V1 vulnerability when the window size is set to 80 tokens", so that is the size used for the analysis. By sliding the window of one token for each test, we can generate a plot that shows how the likelihood of being vulnerable changes throughout the code. 
 	
 	For each mode of operation, the analysis generates three files:
 	\begin{itemize}
@@ -934,7 +961,7 @@ for (; n < 16; ++n)
 		\label{fig:sliding-wnd}
 	\end{figure}
 
-	Figures \ref{fig:conf-cbc}, \ref{fig:conf-ctr}, \ref{fig:conf-ofb}, instead, show the plots generated by FastSpec for each mode of operation. 
+	Figures \ref{fig:conf-cbc}, \ref{fig:conf-ctr}, \ref{fig:conf-ofb}, instead, show the confidence plots generated by FastSpec for each mode of operation. 
 	
 	\begin{figure}[!ht]
 		\hspace*{-3.6cm}
@@ -957,7 +984,7 @@ for (; n < 16; ++n)
 		\label{fig:conf-ofb}
 	\end{figure}
 	As we would expect, the plots look very similar, as they essentially execute the same algorithm with small variations. %To give a more precise evaluation of the degree of similarity between these plot, we compute the Pearson's correlation coefficient (see Appendix \ref{appendix:maths}).
-	This confirm this impression, I wrote a Python script that overlaps the plots \ref{fig:conf-cbc} and \ref{fig:conf-ctr}: the result is shown in \ref{fig:overlap}. The two plots show uncanny similarities, even though there is a slight shift between them. To get a more satisfying figure, I manually fixed the difference of shift (for which it's sufficient to uncomment a specific line in the script), which results in the plot \ref{fig:overlap-shifted}: we can see that the graphs overlap almost completely, apart from the a small section at the beginning and at the end.
+	This confirm this impression, I wrote a Python script that overlaps the plots \ref{fig:conf-cbc} and \ref{fig:conf-ctr}: the result is shown in \ref{fig:overlap}. The two plots show uncanny similarities, even though there is a slight shift between them. To get a more satisfying figure, I manually fixed the difference of shift (for which it's sufficient to uncomment a specific line in the script), and obtained the plot \ref{fig:overlap-shifted}: we can see that the graphs overlap almost completely, apart from the a small section at the beginning and at the end.
 	
 	\begin{figure}[!ht]
 		\hspace*{-1.5cm}
@@ -973,9 +1000,9 @@ for (; n < 16; ++n)
 		\label{fig:overlap-shifted}
 	\end{figure}
 
-	The same results can be obtained if we overlap different plots, but I decided to omit them for sake of brevity. However, those who are interested in reproducing the results, can modify the file \texttt{test\_files/overlap.py} and uncomment specific lines that I marked in the source code to make further verifications.
+	The same results can be obtained by overlapping different plots (i.e. AEC-CTR and AES-OFB, AES-CBC and AES-OFB), but I decided to omit the respective graphs for sake of brevity. However, those who are interested in reproducing the results, can modify the file \texttt{test\_files/overlap.py} and uncomment specific lines that I marked in the source code to make further verifications.
 	
-	Due to the great level of similarity between the plots, I decided (making a random choice) to analyse only one of three modes of operations taken into account, namely AES-OFB: I will consider as potentially vulnerable only those windows that are assigned by FastSpec to a probability value greater than 80\% of being vulnerable to Spectre. For this reason, I used another script, \texttt{test\_files/filter\_spectre\_wnd.py}, to filter out all the confidence values that are greater than 0.8 and then retrieve the corresponding lines of code from the \texttt{.tsv} file. For instance, for AES-OFB we obtained the line indexes shown in Figure \ref{fig:idx}. By grouping together contiguous values, we can extract from this list 6 sets of windows; finally, after re-arraging these windows according to Assembly's 
+	Due to the great level of similarity between the plots, I decided to analyse only one of three modes of operations taken into account, so I randomly chose AES-OFB. I will consider as potentially vulnerable only those windows that are assigned by FastSpec to a probability value greater than 80\% of being vulnerable to Spectre. To isolate such windows, I used another script, \texttt{test\_files/filter\_spectre\_wnd.py}, to filter out all the confidence values that are greater than 0.8 and then retrieve the corresponding lines of code from the \texttt{.tsv} file. For instance, for AES-OFB we obtained the line indexes shown in Figure \ref{fig:idx}. By grouping together contiguous values, we can extract from this list 6 sets of windows; finally, after re-arraging these windows according to Assembly's 
 	syntax, we obtain the code snippets shown in the listing below: these are the pieces of code that FastSpec evaluated as likely to be subject to Spectre vulnerabilities.
 	
 	\begin{figure}[!ht]
@@ -996,25 +1023,26 @@ for (; n < 16; ++n)
 	Unfortunately, performing all these tasks for infeasible, not only because it would have required a great amount of time (GANs are known for being extremely slow to train), but also due to the lack of an appropriate architectural support. For this reason, the only vulnerability we should look for in the incriminated snippets is Spectre-PHT.
 		
 	\begin{minipage}{.45\textwidth}
-		\begin{lstlisting}[caption={Window 369-379}]
+		\begin{lstlisting}[caption={Window 369-379}, label=gadget1]
+... %rdi
 push %rdi
 mov %rax , %rdi
-callq <label> <imm>, %rsp
+callq <label> <imm> , %rsp
 nop
 leaveq
 retq <UNK>
 push %rbp
-mov %rsp, %rbp
-mov %rdi, <imm>(%rbp)
-mov %esi, <imm>(%rbp)
-mov %rdx, <imm>(%rbp)
-movl <imm>, <imm>(%rbp)
-cmpq <imm>, <imm>(%rbp)
+mov %rsp , %rbp
+mov %rdi , <imm> ( %rbp )
+mov %esi , <imm> ( %rbp )
+mov %rdx , <imm> ( %rbp )
+movl <imm> , <imm> ( %rbp )
+cmpq <imm> , <imm> ( %rbp )
 je cmpq <imm> ...
 		\end{lstlisting}
 	\end{minipage}\hfill
 	\begin{minipage}{.45\textwidth}
-		\begin{lstlisting}[caption={Window 7992-7997}]
+		\begin{lstlisting}[caption={Window 7992-7997}, label=gadget2]
 mov <imm> (%rbp), %edx
 mov %dl, (%rax)
 nop
@@ -1030,7 +1058,7 @@ mov <imm>(%rbp), %rax
 	\end{minipage}
 
 	\begin{minipage}{.45\textwidth}
-	\begin{lstlisting}[caption={Window 11024-11031}]
+	\begin{lstlisting}[caption={Window 11024-11031}, label=gadget3]
 mov <imm> (%rbp), %edx
 mov %dl, (%rax)
 nop
@@ -1046,7 +1074,7 @@ mov %rcx, <imm>(%rbp)
 	\end{lstlisting}
 \end{minipage}\hfill
 \begin{minipage}{.45\textwidth}
-	\begin{lstlisting}[caption={Window 11351-11392}]
+	\begin{lstlisting}[caption={Window 11351-11392}, label=gadget4]
 mov <imm> (%rbp), %esi
 mov <imm> (%rbp), %rax
 add %rsi, %rax
@@ -1065,7 +1093,7 @@ je mov <imm>, (%rbp)
 \end{minipage}
 
 	\begin{minipage}{.45\textwidth}
-	\begin{lstlisting}[caption={Window 11598-11601}]
+	\begin{lstlisting}[caption={Window 11598-11601}, label=gadget5]
 mov <imm> (%rbp), %rax
 mov %edx, (%rax)
 nop
@@ -1082,7 +1110,7 @@ movabs <imm>, %rdx
 	\end{lstlisting}
 \end{minipage}\hfill
 \begin{minipage}{.45\textwidth}
-	\begin{lstlisting}[caption={Window 11868-11902}]
+	\begin{lstlisting}[caption={Window 11868-11902}, label=gadget6]
 mov %r12d, %edi
 callq <label> <imm>, %rbx
 cmp %rbx, %rbp
@@ -1102,10 +1130,43 @@ add <imm>, %rsp
 \end{minipage}
 	\vspace{3mm}
 	
-	As described in Section \ref{sec:spectre-pht}, a Spectre-PHT attack needs a conditional branch to be carried out: this translates into a jump instruction in Assembly.
-	\subsection{Considerations about the results}
+	As described in Section \ref{sec:spectre-pht}, a Spectre-PHT attack needs a conditional branch to be carried out: this translates into a jump instruction in Assembly (e.g. \texttt{jmp}, \texttt{jbe}, \texttt{jae}).
 	
-	\chapter{Conclusions}
+	\begin{comment}
+	For example, the gadget shown in listing \ref{spectre-pht-c} translate to the Assembly snipped in \ref{spectre-pht-asm}.
+	
+	\begin{minipage}{.4\textwidth}
+		\begin{lstlisting}[caption={\small Classic Spectre-PHT gadget}, label=spectre-pht-c]
+void victim(size_t x) {
+	if (x < array1_size) {
+		temp &= 
+			array2[array1[x] * 512];
+	}
+}
+		\end{lstlisting}
+	\end{minipage}\hfill
+	\begin{minipage}{.55\textwidth}
+		\begin{lstlisting}[caption={Assembly translation}, label=spectre-pht-asm]
+	mov eax, DWORD PTR array1_size
+	cmp rcx, rax
+	jae SHORT $LN2@victim
+	lfence
+	lea rdx, OFFSET FLAT:__ImageBase
+	movzx eax, BYTE PTR array1[rdx+rcx]
+	shl rax, 9
+	movzx eax, BYTE PTR array2[rax+rdx]
+	and BYTE PTR temp, al
+$LN2@victim:
+	ret 0
+		\end{lstlisting}
+	\end{minipage}
+	\end{comment}
+
+	However, only 3 out of 6 detected gadgets present a jump instruction, namely listings \ref{gadget1}, \ref{gadget4}, and \ref{gadget6}. 
+	
+	\subsection{Considerations about the results}\label{sec:final}
+	
+	\chapter{Conclusions}\label{conclusions}
 	
 	\appendix
 	

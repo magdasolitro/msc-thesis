@@ -1,4 +1,4 @@
-import numpy as np
+import scipy.stats
 import matplotlib.pyplot as plt
 import csv
 
@@ -17,11 +17,11 @@ if __name__ == "__main__":
         i = 0
         for line in csv_file:
             conf_cbc.append(line[1])
-        
-        conf_cbc = conf_cbc[1:11914]
+
+        #conf_cbc = conf_cbc[1:11914]
 
         # TO SHIFT THE PLOT, UNCOMMENT THE NEXT LINE
-        # conf_cbc = conf_cbc[50:11963]
+        conf_cbc = conf_cbc[50:11963]
 
         for i in range(len(conf_cbc)):
             conf_cbc[i] = float(conf_cbc[i])
@@ -47,21 +47,25 @@ if __name__ == "__main__":
 
         conf_ofb = conf_ofb[1:]
 
-        # TO SHIFT THE PLOT, UNCOMMENT THE NEXT LINE
-        # conf_ofb = conf_ofb[50:]
-        # padding = np.zeros(49)
-        # conf_ofb.append(padding)
-
         for i in range(len(conf_ofb)):
             conf_ofb[i] = float(conf_ofb[i])
 
 
-    # pearson = np.corrcoef(conf_cbc, conf_ctr)
+    # PEARSON'S CORRELATION
+    pearson_cbc_ctr = scipy.stats.pearsonr(conf_cbc, conf_ctr)[0]
+    print(pearson_cbc_ctr)
 
-    # plt.plot(conf_cbc, linewidth=0.5, label='AES-CBC')
-    # plt.plot(conf_ctr, color='red', linewidth=0.5, label='AES-CTR')
-    # legend = plt.legend(loc='upper center')
-    # plt.show()
+    pearson_cbc_ofb = scipy.stats.pearsonr(conf_cbc, conf_ofb)[0]
+    print(pearson_cbc_ofb)
+
+    pearson_ctr_ofb = scipy.stats.pearsonr(conf_ctr, conf_ofb)[0]
+    print(pearson_ctr_ofb)
+
+    # COMPARE AES-CBC AND AES-CTR CONFIDENCE VALUES
+    plt.plot(conf_cbc, linewidth=0.5, label='AES-CBC')
+    plt.plot(conf_ctr, color='red', linewidth=0.5, label='AES-CTR')
+    legend = plt.legend(loc='upper center')
+    plt.show()
 
     # COMPARE AES-CTR AND AES-OFB CONFIDENCE VALUES
     # plt.plot(conf_ctr, linewidth=0.5, label='AES-CTR')
