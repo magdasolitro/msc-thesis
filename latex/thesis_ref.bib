@@ -1,0 +1,587 @@
+@inproceedings{Gomes2009,
+	title={An overview on the Static Code Analysis approach in Software Development},
+	author={Ivo Vieira Gomes and Pedro Morgado and Tiago Gomes and Rodrigo M. L. M. Moreira},
+	year={2009}
+}
+
+@article{Church1936,
+	ISSN = {00029327, 10806377},
+	URL = {http://www.jstor.org/stable/2371045},
+	author = {Alonzo Church},
+	journal = {American Journal of Mathematics},
+	number = {2},
+	pages = {345--363},
+	publisher = {Johns Hopkins University Press},
+	title = {An Unsolvable Problem of Elementary Number Theory},
+	urldate = {2022-04-23},
+	volume = {58},
+	year = {1936}
+}
+
+@article{Turing1937,
+	author = {Turing, A. M.},
+	title = {On Computable Numbers, with an Application to the Entscheidungsproblem},
+	journal = {Proceedings of the London Mathematical Society},
+	volume = {s2-42},
+	number = {1},
+	pages = {230-265},
+	doi = {https://doi.org/10.1112/plms/s2-42.1.230},
+	url = {https://londmathsoc.onlinelibrary.wiley.com/doi/abs/10.1112/plms/s2-42.1.230},
+	eprint = {https://londmathsoc.onlinelibrary.wiley.com/doi/pdf/10.1112/plms/s2-42.1.230},
+	year = {1937}
+}
+
+@article{Wang2019,
+	author = {Wang, Guanhua and Chattopadhyay, Sudipta and Gotovchits, Ivan and Mitra, Tulika and Roychoudhury, Abhik},
+	year = {2019},
+	month = {11},
+	pages = {1-1},
+	title = {oo7: Low-Overhead Defense Against Spectre Attacks via Program Analysis},
+	volume = {PP},
+	journal = {IEEE Transactions on Software Engineering},
+	doi = {10.1109/TSE.2019.2953709}
+}
+
+@inproceedings{Kocher2019,  
+	author={Kocher, Paul and Horn, Jann and Fogh, Anders and Genkin, Daniel and Gruss, Daniel and Haas, Werner and Hamburg, Mike and Lipp, Moritz and Mangard, Stefan and Prescher, Thomas and Schwarz, Michael and Yarom, Yuval},  booktitle={2019 IEEE Symposium on Security and Privacy (SP)},   title={Spectre Attacks: Exploiting Speculative Execution},   year={2019},  volume={},  number={},  pages={1-19},  doi={10.1109/SP.2019.00002}}
+
+@inproceedings {Canella2019,
+	author = {Claudio Canella and Jo Van Bulck and Michael Schwarz and Moritz Lipp and Benjamin von Berg and Philipp Ortner and Frank Piessens and Dmitry Evtyushkin and Daniel Gruss},
+	title = {A Systematic Evaluation of Transient Execution Attacks and Defenses},
+	booktitle = {28th USENIX Security Symposium (USENIX Security 19)},
+	year = {2019},
+	isbn = {978-1-939133-06-9},
+	address = {Santa Clara, CA},
+	pages = {249--266},
+	url = {https://www.usenix.org/conference/usenixsecurity19/presentation/canella},
+	publisher = {USENIX Association},
+	month = aug,
+}
+
+@article{Evtyushkin2018,
+	author = {Evtyushkin, Dmitry and Riley, Ryan and Abu-Ghazaleh, Nael CSE and ECE and Ponomarev, Dmitry},
+	title = {BranchScope: A New Side-Channel Attack on Directional Branch Predictor},
+	year = {2018},
+	issue_date = {February 2018},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {53},
+	number = {2},
+	issn = {0362-1340},
+	url = {https://doi.org/10.1145/3296957.3173204},
+	doi = {10.1145/3296957.3173204},
+	abstract = {We present BranchScope - a new side-channel attack where the attacker infers the direction of an arbitrary conditional branch instruction in a victim program by manipulating the shared directional branch predictor. The directional component of the branch predictor stores the prediction on a given branch (taken or not-taken) and is a different component from the branch target buffer (BTB) attacked by previous work. BranchScope is the first fine-grained attack on the directional branch predictor, expanding our understanding of the side channel vulnerability of the branch prediction unit. Our attack targets complex hybrid branch predictors with unknown organization. We demonstrate how an attacker can force these predictors to switch to a simple 1-level mode to simplify the direction recovery. We carry out BranchScope on several recent Intel CPUs and also demonstrate the attack against an SGX enclave.},
+	journal = {SIGPLAN Not.},
+	month = {mar},
+	pages = {693–707},
+	numpages = {15},
+	keywords = {microarchitecture security, SGX, timing attacks, branch predictor, performance counters, side-channel, attack}
+}
+
+@techreport{Perleberg1989,
+	Author = {Perleberg, Chris H. and Smith, Alan Jay},
+	Title = {Branch Target Buffer Design and Optimization},
+	Institution = {EECS Department, University of California, Berkeley},
+	Year = {1989},
+	Month = {Dec},
+	URL = {http://www2.eecs.berkeley.edu/Pubs/TechRpts/1989/5904.html},
+	Number = {UCB/CSD-89-552},
+	Abstract = {The Branch Target Buffer (BTB) can reduce the performance penalty of branches in pipelined processors by predicting the path of the branch and caching information used by the branch. This paper discusses two major issues in the design of BTBs with the theme of achieving maximum performance with a limited number of bits allocated to the BTB design. First is the issue of BTB management -- when to enter and discard branches from the BTB. Higher performance can be obtained by entering branches into the BTB only when they experience a branch taken execution. A new method for discarding branches from the BTB is examined. This method discards the branch with the smallest expected value for improving performance, outperforming the LRU strategy by a small margin, at the cost of additional complexity. <p>The second major issue discussed is the question of what information to store in the BTB. A BTB entry can consist of one or more of the following: branch tag (i.e. the branch address), prediction information, the branch target address, and instructions at the branch target. A variety of BTB designs, with one or more of these fields, are evaluated and compared. This study is then extended to multilevel BTBs, in which different levels have different amounts of information per entry. For the specific implementation assumptions used, multilevel BTBs improved performance over single level BTBs only slightly, at the cost of additional complexity. Multi-level BTBs may provide significant performance improvements for other implementations, however. <p>Design target miss ratios for BTBs are also developed, so that the performance of BTBs for real workloads may be estimated.}
+}
+
+@inproceedings{Maisuradze2018,
+	author = {Maisuradze, Giorgi and Rossow, Christian},
+	title = {Ret2spec: Speculative Execution Using Return Stack Buffers},
+	year = {2018},
+	isbn = {9781450356930},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3243734.3243761},
+	doi = {10.1145/3243734.3243761},
+	abstract = {Speculative execution is an optimization technique that has been part of CPUs for over a decade. It predicts the outcome and target of branch instructions to avoid stalling the execution pipeline. However, until recently, the security implications of speculative code execution have not been studied. In this paper, we investigate a special type of branch predictor that is responsible for predicting return addresses. To the best of our knowledge, we are the first to study return address predictors and their consequences for the security of modern software. In our work, we show how return stack buffers (RSBs), the core unit of return address predictors, can be used to trigger misspeculations. Based on this knowledge, we propose two new attack variants using RSBs that give attackers similar capabilities as the documented Spectre attacks. We show how local attackers can gain arbitrary speculative code execution across processes, e.g., to leak passwords another user enters on a shared system. Our evaluation showed that the recent Spectre countermeasures deployed in operating systems can also cover such RSB-based cross-process attacks. Yet we then demonstrate that attackers can trigger misspeculation in JIT environments in order to leak arbitrary memory content of browser processes. Reading outside the sandboxed memory region with JIT-compiled code is still possible with 80% accuracy on average.},
+	booktitle = {Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security},
+	pages = {2109–2122},
+	numpages = {14},
+	keywords = {side channel attacks, javascript, hardware security},
+	location = {Toronto, Canada},
+	series = {CCS '18}
+}
+
+@inproceedings{Koruyeh2018,
+	author = {Koruyeh, Esmaeil Mohammadian and Khasawneh, Khaled N. and Song, Chengyu and Abu-Ghazaleh, Nael},
+	title = {Spectre Returns! Speculation Attacks Using the Return Stack Buffer},
+	year = {2018},
+	publisher = {USENIX Association},
+	address = {USA},
+	abstract = {The recent Spectre attacks exploit speculative execution, a pervasively used feature of modern microprocessors, to allow the exfiltration of sensitive data across protection boundaries. In this paper, we introduce a new Spectreclass attack that we call SpectreRSB. In particular, rather than exploiting the branch predictor unit, SpectreRSB exploits the return stack buffer (RSB), a common predictor structure in modern CPUs used to predict return addresses. We show that both local attacks (within the same process such as Spectre 1) and attacks on SGX are possible by constructing proof of concept attacks. We also analyze additional types of the attack on the kernel or across address spaces and show that under some practical and widely used conditions they are possible. Importantly, none of the known defenses including Retpoline and Intel's microcode patches stop all SpectreRSB attacks. We believe that future system developers should be aware of this vulnerability and consider it in developing defenses against speculation attacks. In particular, on Core-i7 Skylake and newer processors (but not on Intel's Xeon processor line), a patch called RSB refilling is used to address a vulnerability when the RSB underfills; this defense interferes with SpectreRSB's ability to launch attacks that switch into the kernel. We recommend that this patch should be used on all machines to protect against SpectreRSB.},
+	booktitle = {Proceedings of the 12th USENIX Conference on Offensive Technologies},
+	pages = {3},
+	numpages = {1},
+	location = {Baltimore, MD, USA},
+	series = {WOOT'18}
+}
+
+@misc{Fog2021,
+	Author = {Agner Fog},
+	Title = {The microarchitecture of Intel, AMD, and
+	VIA CPUs. An optimization guide for assembly programmers and
+	compiler makers},
+	Institution = {Technical University of Denmark, Lyngby},
+	Year = {2021},
+	Month = {May},
+	URL = {https://www.agner.org/optimize/microarchitecture.pdf},
+	numpages = {262}
+}
+
+@inproceedings{Zhang2017,
+	author = {Zhang, Yinqian},
+	title = {Cache Side Channels: State of the Art and Research Opportunities},
+	year = {2017},
+	isbn = {9781450349468},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3133956.3136064},
+	doi = {10.1145/3133956.3136064},
+	abstract = {Cache side channels are a type of attack vectors through which an adversary infers secret information of a running program by observing its use of CPU caches or other caching hardware. The study of cache side channels, particularly access-driven cache side channels, is gaining traction among security researchers in recent years. A large volume of papers on cache side-channel attacks or defenses is being published in both security and computer architecture conferences each year. However, due to the diversity of the research goals, methods, and perspectives, it becomes much harder for researchers new to this field to keep track of the frontiers of this research topic. As such, in this tutorial, we will provide a high-level overview of the studies of cache side channels to help other security researchers to comprehend the state of the art of this research area, and to identify research problems that have not been addressed by the community. We also hope to bridge the gaps between the security community and the computer architecture community on this specific research topic by summarizing research papers from both sides.},
+	booktitle = {Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security},
+	pages = {2617–2619},
+	numpages = {3},
+	keywords = {cache side channels},
+	location = {Dallas, Texas, USA},
+	series = {CCS '17}
+}
+
+@article{Page2002,
+	author = {Page, Dan},
+	year = {2002},
+	month = {01},
+	pages = {169},
+	title = {Theoretical Use of Cache Memory as a Cryptanalytic Side-Channel},
+	volume = {2002},
+	journal = {IACR Cryptology ePrint Archive}
+}
+
+@inproceedings {Yarom2014,
+	author = {Yuval Yarom and Katrina Falkner},
+	title = {{FLUSH+RELOAD}: A High Resolution, Low Noise, L3 Cache {Side-Channel} Attack},
+	booktitle = {23rd USENIX Security Symposium (USENIX Security 14)},
+	year = {2014},
+	isbn = {978-1-931971-15-7},
+	address = {San Diego, CA},
+	pages = {719--732},
+	url = {https://www.usenix.org/conference/usenixsecurity14/technical-sessions/presentation/yarom},
+	publisher = {USENIX Association},
+	month = aug,
+}
+
+@inproceedings{Oswald2004,
+	author = {Ors, Berna and Gurkaynak, Frank and Oswald, Elisabeth and Preneel, B.},
+	year = {2004},
+	month = {05},
+	pages = {546 - 552 Vol.2},
+	title = {Power-analysis attack on an ASIC AES implementation},
+	volume = {2},
+	isbn = {0-7695-2108-8},
+	journal = {Proc of IEEE International Conference Information Technology: Coding and Computing},
+	doi = {10.1109/ITCC.2004.1286711}
+}
+
+@book{Mangard2010,
+	author = {Mangard, Stefan and Oswald, Elisabeth and Popp, Thomas},
+	title = {Power Analysis Attacks: Revealing the Secrets of Smart Cards},
+	year = {2010},
+	isbn = {1441940391},
+	publisher = {Springer Publishing Company, Incorporated},
+	edition = {1st},
+	abstract = {Power analysis attacks allow the extraction of secret information from smart cards. Smart cards are used in many applications including banking, mobile communications, pay TV, and electronic signatures. In all these applications, the security of the smart cards is of crucial importance. Power Analysis Attacks: Revealing the Secrets of Smart Cards is the first comprehensive treatment of power analysis attacks and countermeasures. Based on the principle that the only way to defend against power analysis attacks is to understand them, this book explains how power analysis attacks work. Using many examples, it discusses simple and differential power analysis as well as advanced techniques like template attacks. Furthermore, the authors provide an extensive discussion of countermeasures like shuffling, masking, and DPA-resistant logic styles. By analyzing the pros and cons of the different countermeasures, this volume allows practitioners to decide how to protect smart cards.}
+}
+
+@inproceedings{Mangard2003,
+	author={Mangard, Stefan},
+	editor= {Lee, Pil Joong and Lim, Chae Hoon} ,
+	title={A Simple Power-Analysis (SPA) Attack on Implementations of the AES Key Expansion},
+	booktitle={Information Security and Cryptology --- ICISC 2002},
+	year={2003},
+	publisher={Springer Berlin Heidelberg},
+	address={Berlin, Heidelberg},
+	pages={343--358},
+	abstract={This article presents a simple power-analysis (SPA) attack on implementations of the AES key expansion. The attack reveals the secret key of AES software implementations on smart cards by exploiting the fact that the power consumption of most smart-card processors leaks information during the AES key expansion. The presented attack efficiently utilizes this information leakage to substantially reduce the key space that needs to be considered in a brute-force search for the secret key. The details of the attack are described on the basis of smart cards that leak the Hamming weight of intermediate results occurring during the AES key expansion.},
+	isbn={978-3-540-36552-5}
+}
+
+@article{Buchanan2017,
+	author = {Owen Lo and William J. Buchanan and Douglas Carson},
+	title = {Power analysis attacks on the AES-128 S-box using differential power analysis (DPA) and correlation power analysis (CPA)},
+	journal = {Journal of Cyber Security Technology},
+	volume = {1},
+	number = {2},
+	pages = {88-107},
+	year  = {2017},
+	publisher = {Taylor & Francis},
+	doi = {10.1080/23742917.2016.1231523},
+	URL = {https://doi.org/10.1080/23742917.2016.1231523},
+	eprint = {https://doi.org/10.1080/23742917.2016.1231523}
+	
+}
+
+@inproceedings{Neve2007,
+	author={Neve, Michael and Seifert, Jean-Pierre},
+	editor={Biham, Eli and Youssef, Amr M.},
+	title={Advances on Access-Driven Cache Attacks on AES},
+	booktitle={Selected Areas in Cryptography},
+	year={2007},
+	publisher={Springer Berlin Heidelberg},
+	address={Berlin, Heidelberg},
+	pages={147--162},
+	abstract={An access-driven attack is a class of cache-based side channel analysis. Like the time-driven attack, the cache's timings are under inspection as a source of information leakage. Access-driven attacks scrutinize the cache behavior with a finer granularity, rather than evaluating the overall execution time. Access-driven attacks leverage the ability to detect whether a cache line has been evicted, or not, as the primary mechanism for mounting an attack. In this paper we focus on the case of AES and we show that the vast majority of processors suffer from this cache-based vulnerability. Our best results are indeed performed on a processor without the multi-threading capabilities --- in contrast to previous works in this area that had suggested that multi-threading actually improved, or even made possible, this class of attack.},
+	isbn={978-3-540-74462-7}
+}
+
+@inproceedings{Lipp2018,
+	author = {Moritz Lipp and Michael Schwarz and Daniel Gruss and Thomas Prescher and Werner Haas and Anders Fogh and Jann Horn and Stefan Mangard and Paul Kocher and Daniel Genkin and Yuval Yarom and Mike Hamburg},
+	title = {Meltdown: Reading Kernel Memory from User Space},
+	booktitle = {27th {USENIX} Security Symposium ({USENIX} Security 18)},
+	year = {2018},
+}
+
+@inproceedings{Guarnieri2018,
+	author={Guarnieri, Marco and Köpf, Boris and Morales, José F. and Reineke, Jan and Sánchez, Andrés},
+	booktitle={2020 IEEE Symposium on Security and Privacy (SP)}, 
+	title={Spectector: Principled Detection of Speculative Information Flows}, 
+	year={2020},
+	volume={},
+	number={},
+	pages={1-19},
+	doi={10.1109/SP40000.2020.00011}
+}
+
+@inproceedings{Tol2021,
+	author = {Tol, M. Caner and Gulmezoglu, Berk and Yurtseven, Koray and Sunar, Berk},
+	year = {2021},
+	month = {09},
+	pages = {},
+	title = {FastSpec: Scalable Generation and Detection of Spectre Gadgets Using Neural Embeddings},
+	doi = {10.1109/EuroSP51992.2021.00047}
+}
+
+@inproceedings{Ratliff2013,
+	author={Ratliff, Lillian J. and Burden, Samuel A. and Sastry, S. Shankar},
+	booktitle={2013 51st Annual Allerton Conference on Communication, Control, and Computing (Allerton)}, 
+	title={Characterization and computation of local Nash equilibria in continuous games}, 
+	year={2013},
+	volume={},
+	number={},
+	pages={917-924},
+	doi={10.1109/Allerton.2013.6736623}}
+
+@article{Goodfellow2014,
+	title={Generative adversarial nets},
+	author={Goodfellow, Ian and Pouget-Abadie, Jean and Mirza, Mehdi and Xu, Bing and Warde-Farley, David and Ozair, Sherjil and Courville, Aaron and Bengio, Yoshua},
+	journal={Advances in neural information processing systems},
+	volume={27},
+	year={2014}
+}
+
+@inproceedings{Newsome2005,
+	author = {Newsome, James and Song, Dawn},
+	year = {2005},
+	month = {02},
+	pages = {},
+	title = {Dynamic Taint Analysis for Automatic Detection, Analysis, and Signature Generation of Exploits on Commodity Software.}
+}
+
+@inproceedings{Bayer2009,
+	author = {Bayer, Ulrich and Comparetti, Paolo and Hlauschek, Clemens and Krügel, Christopher and Kirda, Engin},
+	year = {2009},
+	month = {01},
+	pages = {},
+	title = {Scalable, Behavior-Based Malware Clustering.}
+}
+
+@inproceedings{Yin2007,
+	author = {Yin, Heng and Song, Dawn and Egele, Manuel and Kruegel, Christopher and Kirda, Engin},
+	title = {Panorama: Capturing System-Wide Information Flow for Malware Detection and Analysis},
+	year = {2007},
+	isbn = {9781595937032},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/1315245.1315261},
+	doi = {10.1145/1315245.1315261},
+	abstract = {Malicious programs spy on users' behavior and compromise their privacy. Even software from reputable vendors, such as Google Desktop and Sony DRM media player, may perform undesirable actions. Unfortunately, existing techniques for detecting malware and analyzing unknown code samples are insufficient and have significant shortcomings. We observe that malicious information access and processing behavior is the fundamental trait of numerous malware categories breaching users' privacy (including keyloggers, password thieves, network sniffers, stealth backdoors, spyware and rootkits), which separates these malicious applications from benign software. We propose a system, Panorama, to detect and analyze malware by capturing this fundamental trait. In our extensive experiments, Panorama successfully detected all the malware samples and had very few false positives. Furthermore, by using Google Desktop as a case study, we show that our system can accurately capture its information access and processing behavior, and we can confirm that it does send back sensitive information to remote servers in certain settings. We believe that a system such as Panorama will offer indispensable assistance to code analysts and malware researchers by enabling them to quickly comprehend the behavior and innerworkings of an unknown sample.},
+	booktitle = {Proceedings of the 14th ACM Conference on Computer and Communications Security},
+	pages = {116–127},
+	numpages = {12},
+	keywords = {malware detection, spyware, dynamic taint analysis, malware analysis},
+	location = {Alexandria, Virginia, USA},
+	series = {CCS '07}
+}
+
+@inproceedings{Balzarotti2008,
+	author={Balzarotti, Davide and Cova, Marco and Felmetsger, Vika and Jovanovic, Nenad and Kirda, Engin and Kruegel, Christopher and Vigna, Giovanni},
+	booktitle={2008 IEEE Symposium on Security and Privacy (sp 2008)}, 
+	title={Saner: Composing Static and Dynamic Analysis to Validate Sanitization in Web Applications}, 
+	year={2008},
+	volume={},
+	number={},
+	pages={387-401},
+	doi={10.1109/SP.2008.22}
+}
+
+@inproceedings{NguyenTuong2005,
+	author={Nguyen-Tuong, Anh and Guarnieri, Salvatore and Greene, Doug	and Shirley, Jeff and Evans, David},
+	editor={Sasaki, Ryoichi and Qing, Sihan and Okamoto, Eiji and Yoshiura, Hiroshi},
+	title={Automatically Hardening Web Applications Using Precise Tainting},
+	booktitle={Security and Privacy in the Age of Ubiquitous Computing},
+	year={2005},
+	publisher={Springer US},
+	address={Boston, MA},
+	pages={295--307},
+	abstract={Most web applications contain security vulnerabilities. The simple and natural ways of creating a web application are prone to SQL injection attacks and cross-site scripting attacks as well as other less common vulnerabilities. In response, many tools have been developed for detecting or mitigating common web application vulnerabilities. Existing techniques either require effort from the site developer or are prone to false positives. This paper presents a fully automated approach to securely hardening web applications. It is based on precisely tracking taintedness of data and checking specifically for dangerous content only in parts of commands and output that came from untrustworthy sources. Unlike previous work in which everything that is derived from tainted input is tainted, our approach precisely tracks taintedness within data values.},
+	isbn={978-0-387-25660-3}
+}
+
+@article{Baldoni2018,
+	author    = {Baldoni, Roberto and Coppa, Emilio and D'Elia, Daniele Cono and Demetrescu, Camil and Finocchi, Irene},
+	title     = {A Survey of Symbolic Execution Techniques},
+	journal   = {ACM Comput. Surv.},
+	volume    = {51},
+	number = {3},
+	articleno = {50},
+	publisher = {ACM},
+	address = {New York, NY, USA},
+	year = {2018}
+}
+
+
+@inproceedings{Dai2018,
+	title={A Review of Researching on Dynamic Taint Analysis Technique},
+	author={Peiwu Dai and Zulie Pan and Yang Li},
+	year={2018/12},
+	booktitle={Proceedings of the 2018 3rd Joint International Information Technology Mechanical and Electronic Engineering Conference (JIMEC 2018)},
+	pages={118-123},
+	issn={2589-4943},
+	isbn={978-94-6252-647-1},
+	url={https://doi.org/10.2991/jimec-18.2018.25},
+	doi={https://doi.org/10.2991/jimec-18.2018.25},
+	publisher={Atlantis Press}
+}
+
+@book{Rival2020,
+	author = {Xavier Rival, Kwangkeun Yi},
+	year = {2020},
+	title = {Introduction to Static Analysis: an abstract interpretation perspective},
+	publisher = {The MIT Press},
+	address = {Massachusetts},
+	isbn = {9780262043410}
+}
+
+@inproceedings{Daniel2021,
+	author = {Daniel, Lesly-Ann and Bardin, Sébastien and Rezk, Tamara},
+	year = {2021},
+	month = {01},
+	pages = {},
+	title = {Hunting the Haunter — Efficient Relational Symbolic Execution for Spectre with Haunted RelSE},
+	doi = {10.14722/ndss.2021.24286}
+}
+
+@article{Krinke2007,
+	author = {Krinke, Jens},
+	year = {2007},
+	month = {01},
+	pages = {},
+	title = {Information Flow Control and Taint Analysis with Dependence Graphs}
+}
+
+@book{Odifreddi1989,
+	author = {Piergiorgio Odifreddi},
+	year = {1989},
+	title = {Classical Recursion Theory: The Theory of Functions and Sets of Natural Numbers},
+	publisher = {Sole Distributors for the Usa and Canada, Elsevier Science Pub. Co.}
+}
+
+@book{Rogers1987,
+	author = {Rogers, Hartley},
+	title = {Theory of Recursive Functions and Effective Computability},
+	year = {1987},
+	isbn = {0262680521},
+	publisher = {MIT Press},
+	address = {Cambridge, MA, USA}
+}
+
+@article{Hinman2007,
+	publisher = {Association for Symbolic Logic},
+	journal = {Bulletin of Symbolic Logic},
+	year = {2007},
+	volume = {13},
+	title = {Fundamentals of Mathematical Logic},
+	author = {Peter G. Hinman},
+	number = {3},
+	pages = {363--365}
+}
+
+@article{Wang2020,
+	author = {Wang, Guanhua and Chattopadhyay, Sudipta and Biswas, Arnab Kumar and Mitra, Tulika and Roychoudhury, Abhik},
+	title = {KLEESpectre: Detecting Information Leakage through Speculative Cache Attacks via Symbolic Execution},
+	year = {2020},
+	issue_date = {July 2020},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {29},
+	number = {3},
+	issn = {1049-331X},
+	url = {https://doi.org/10.1145/3385897},
+	doi = {10.1145/3385897},
+	abstract = {Spectre-style attacks disclosed in early 2018 expose data leakage scenarios via cache side channels. Specifically, speculatively executed paths due to branch mis-prediction may bring secret data into the cache, which are then exposed via cache side channels even after the speculative execution is squashed. Symbolic execution is a well-known test generation method to cover program paths at the level of the application software. In this article, we extend symbolic execution with modeling of cache and speculative execution. Our tool KLEESPECTRE, built on top of the KLEE symbolic execution engine, can thus provide a testing engine to check for data leakage through the cache side channel as shown via Spectre attacks. Our symbolic cache model can verify whether the sensitive data leakage due to speculative execution can be observed by an attacker at a given program point. Our experiments show that KLEESPECTRE can effectively detect data leakage along speculatively executed paths and our cache model can make the leakage detection more precise.},
+	journal = {ACM Trans. Softw. Eng. Methodol.},
+	month = {jun},
+	articleno = {14},
+	numpages = {31},
+	keywords = {Spectre attacks, software security, cache side channel, symbolic execution}
+}
+
+@misc{Kocher2018,
+	author = {Paul Kocher},
+	title = {Spectre Mitigations in Microsoft's C/C++ Compiler},
+	year = {2018},
+	url = {https://www.paulkocher.com/doc/MicrosoftCompilerSpectreMitigation.html}
+}
+
+@article{King76,
+	author = {King, James C.},
+	title = {Symbolic Execution and Program Testing},
+	year = {1976},
+	issue_date = {July 1976},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {19},
+	number = {7},
+	issn = {0001-0782},
+	url = {https://doi.org/10.1145/360248.360252},
+	doi = {10.1145/360248.360252},
+	abstract = {This paper describes the symbolic execution of programs. Instead of supplying the normal inputs to a program (e.g. numbers) one supplies symbols representing arbitrary values. The execution proceeds as in a normal execution except that values may be symbolic formulas over the input symbols. The difficult, yet interesting issues arise during the symbolic execution of conditional branch type statements. A particular system called EFFIGY which provides symbolic execution for program testing and debugging is also described. It interpretively executes programs written in a simple PL/I style programming language. It includes many standard debugging features, the ability to manage and to prove things about symbolic expressions, a simple program testing manager, and a program verifier. A brief discussion of the relationship between symbolic execution and program proving is also included.},
+	journal = {Commun. ACM},
+	month = {jul},
+	pages = {385–394},
+	numpages = {10},
+	keywords = {program debugging, program testing, program verification, program proving, symbolic execution, symbolic interpretation}
+}
+
+@inproceedings{Cadar2008,
+	author = {Cadar, Cristian and Dunbar, Daniel and Engler, Dawson},
+	title = {KLEE: Unassisted and Automatic Generation of High-Coverage Tests for Complex Systems Programs},
+	year = {2008},
+	publisher = {USENIX Association},
+	address = {USA},
+	abstract = {We present a new symbolic execution tool, KLEE, capable of automatically generating tests that achieve high coverage on a diverse set of complex and environmentally-intensive programs. We used KLEE to thoroughly check all 89 stand-alone programs in the GNU COREUTILS utility suite, which form the core user-level environment installed on millions of Unix systems, and arguably are the single most heavily tested set of open-source programs in existence. KLEE-generated tests achieve high line coverage -- on average over 90% per tool (median: over 94%) -- and significantly beat the coverage of the developers' own hand-written test suite. When we did the same for 75 equivalent tools in the BUSYBOX embedded system suite, results were even better, including 100% coverage on 31 of them.We also used KLEE as a bug finding tool, applying it to 452 applications (over 430K total lines of code), where it found 56 serious bugs, including three in COREUTILS that had been missed for over 15 years. Finally, we used KLEE to crosscheck purportedly identical BUSYBOX and COREUTILS utilities, finding functional correctness errors and a myriad of inconsistencies.},
+	booktitle = {Proceedings of the 8th USENIX Conference on Operating Systems Design and Implementation},
+	pages = {209–224},
+	numpages = {16},
+	location = {San Diego, California},
+	series = {OSDI'08}
+}
+
+@book{Katz2007,
+	author = {Katz, Jonathan and Lindell, Yehuda},
+	title = {Introduction to Modern Cryptography, Second Edition},
+	year = {2014},
+	isbn = {1466570261},
+	publisher = {Chapman Hall/CRC},
+	edition = {2nd},
+	abstract = {Cryptography is ubiquitous and plays a key role in ensuring data secrecy and integrity as well as in securing computer systems more broadly. Introduction to Modern Cryptography provides a rigorous yet accessible treatment of this fascinating subject. The authors introduce the core principles of modern cryptography, with an emphasis on formal definitions, clear assumptions, and rigorous proofs of security. The book begins by focusing on private-key cryptography, including an extensive treatment of private-key encryption, message authentication codes, and hash functions. The authors also present design principles for widely used stream ciphers and block ciphers including RC4, DES, and AES, plus provide provable constructions of stream ciphers and block ciphers from lower-level primitives. The second half of the book covers public-key cryptography, beginning with a self-contained introduction to the number theory needed to understand the RSA, Diffie-Hellman, and El Gamal cryptosystems (and others), followed by a thorough treatment of several standardized public-key encryption and digital signature schemes. Integrating a more practical perspective without sacrificing rigor, this widely anticipated Second Edition offers improved treatment of: Stream ciphers and block ciphers, including modes of operation and design principles Authenticated encryption and secure communication sessions Hash functions, including hash-function applications and design principles Attacks on poorly implemented cryptography, including attacks on chained-CBC encryption, padding-oracle attacks, and timing attacks The random-oracle model and its application to several standardized, widely used public-key encryption and signature schemes Elliptic-curve cryptography and associated standards such as DSA/ECDSA and DHIES/ECIES Containing updated exercises and worked examples, Introduction to Modern Cryptography, Second Edition can serve as a textbook for undergraduate- or graduate-level courses in cryptography, a valuable reference for researchers and practitioners, or a general introduction suitable for self-study.}
+}
+
+@misc{AES-FIPS,
+	title = {Specification for the Advanced Encryption Standard (AES)}, 
+	howpublished = {Federal Information Processing Standards Publication 197}, 
+	year = {2001}, 
+	url = {http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf}
+	
+} 
+
+@book{Schneier2015,
+	title={Applied Cryptography: Protocols, Algorithms and Source Code in C},
+	author={Schneier, B.},
+	isbn={9781119096726},
+	lccn={2015932956},
+	url={https://books.google.it/books?id=VjC9BgAAQBAJ},
+	year={2015},
+	publisher={Wiley}
+}
+
+@book{Menezes2018,
+	title={Handbook of Applied Cryptography},
+	author={Menezes, A.J. and van Oorschot, P.C. and Vanstone, S.A.},
+	isbn={9780429881329},
+	series={Discrete Mathematics and Its Applications},
+	url={https://books.google.it/books?id=YyCyDwAAQBAJ},
+	year={2018},
+	publisher={CRC Press}
+}
+
+@misc{DES1999,
+	author = {{National Institute of Standards and Technology}},
+	biburl = {https://csrc.nist.gov/csrc/media/publications/fips/46/3/archive/1999-10-25/documents/fips46-3.pdf},
+	howpublished = {FIPS Publication 46-3},
+	interhash = {e345f8a7b3fae7846a7f76f984862d01},
+	intrahash = {cc9f8a97c52014a952c4426c7f578b13},
+	month = {October},
+	title = {Data Encryption Standard (DES)},
+	uri = {http://csrc.nist.gov/publications/fips/fips46-3/},
+	year = {1999}
+}
+
+@inproceedings {Islam2019,
+	author = {Saad Islam and Ahmad Moghimi and Ida Bruhns and Moritz Krebbel and Berk Gulmezoglu and Thomas Eisenbarth and Berk Sunar},
+	title = {{SPOILER}: Speculative Load Hazards Boost Rowhammer and Cache Attacks},
+	booktitle = {28th USENIX Security Symposium (USENIX Security 19)},
+	year = {2019},
+	isbn = {978-1-939133-06-9},
+	address = {Santa Clara, CA},
+	pages = {621--637},
+	url = {https://www.usenix.org/conference/usenixsecurity19/presentation/islam},
+	publisher = {USENIX Association},
+	month = {aug}
+}
+
+@misc{Devlin2018,
+	doi = {10.48550/ARXIV.1810.04805},
+	url = {https://arxiv.org/abs/1810.04805},
+	author = {Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina},
+	keywords = {Computation and Language (cs.CL), FOS: Computer and information sciences, FOS: Computer and information sciences},
+	title = {BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding},
+	publisher = {arXiv},
+	year = {2018},
+	copyright = {arXiv.org perpetual, non-exclusive license}
+}
+
+@misc{Vaswani2017,
+	doi = {10.48550/ARXIV.1706.03762},
+	url = {https://arxiv.org/abs/1706.03762},
+	author = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, Lukasz and Polosukhin, Illia},
+	keywords = {Computation and Language (cs.CL), Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+	title = {Attention Is All You Need},
+	publisher = {arXiv},
+	year = {2017},
+	copyright = {arXiv.org perpetual, non-exclusive license}
+}
+
+@misc{LLVMasm,
+	author = {Lattner, Chris and Adve, Vikram},
+	title = {LLVM Language Reference Manual},
+	url = {https://releases.llvm.org/2.0/docs/LangRef.html}
+}
+
+
+@article{Pearson1895,
+	author = {Pearson, Karl  and Galton, Francis },
+	title = {VII. Note on regression and inheritance in the case of two parents},
+	journal = {Proceedings of the Royal Society of London},
+	volume = {58},
+	number = {347-352},
+	pages = {240-242},
+	year = {1895},
+	doi = {10.1098/rspl.1895.0041},
+	URL = {https://royalsocietypublishing.org/doi/abs/10.1098/rspl.1895.0041},
+	eprint = {https://royalsocietypublishing.org/doi/pdf/10.1098/rspl.1895.0041},
+	abstract = { Consider a population in which sexual selection and natural selection may or may not be taking place. Assume only that the deviations from the mean in the case of any organ of any generation follow exactly or closely the normal law of frequency, then the following expressions may be shown to give the law of inheritance of the population. }
+}

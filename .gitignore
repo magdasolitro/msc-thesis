@@ -1,19 +1,14 @@
 ref/
 imgs/
 2022_KWF_TimeSheet_Cybersecurity_Solitro-converted.pdf
-thesis_draft2.aux
-thesis_draft2.bbl
-thesis_draft2.blg
-thesis_draft2.log
-thesis_draft2.out
-tex files/thesis_draft2.synctex.gz
-tex files/thesis_draft2.toc
 .DS_Store
-tex files/.DS_Store
-tex files/texput.log
 Screenshot 2022-08-31 at 14.41.42.png
 klee-last
-spectre_attack.c
-test2.c
-thud/
-
+latex/thesis_draft2.aux
+latex/thesis_draft2.bbl
+latex/thesis_draft2.blg
+latex/thesis_draft2.log
+latex/thesis_draft2.out.synctex.gz
+latex/thesis_draft2.toc
+latex/thud
+latex/thesis_draft2.synctex.gz
