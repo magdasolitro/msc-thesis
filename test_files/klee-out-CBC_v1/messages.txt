@@ -1,0 +1,30 @@
+KLEE: Using STP solver backend
+KLEE: 
+============ Spectre ================
+KLEE: Spectre detection summary:
+KLEE: Total Spectre found: 4
+KLEE: 1BR: ./openssl/crypto/aes/aes_core.c: 653, ASMLine: 311, UserControlled: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 672, ASMLine: 441, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 412, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 418, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 432, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 672, ASMLine: 454, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 425, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 672, ASMLine: 447, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+
+KLEE: 1BR: ./openssl/crypto/modes/cbc128.c: 93, ASMLine: 2202, UserControlled: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 797, ASMLine: 861, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+
+KLEE: 1BR: ./openssl/crypto/modes/cbc128.c: 107, ASMLine: 2306, UserControlled: 0
+KLEE: 2RS: ./openssl/crypto/modes/cbc128.c: 106, ASMLine: 2291, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/modes/cbc128.c: 106, ASMLine: 2279, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/modes/cbc128.c: 108, ASMLine: 2316, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+
+KLEE: 1BR: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 16, ASMLine: 2688, UserControlled: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 17, ASMLine: 2681, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 17, ASMLine: 2683, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+

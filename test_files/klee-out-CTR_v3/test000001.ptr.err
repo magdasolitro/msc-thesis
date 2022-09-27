@@ -1,0 +1,14 @@
+Error: memory error: out of bound pointer
+File: ./openssl/crypto/modes/ctr128.c
+Line: 82
+assembly.ll line: 1984
+Stack: 
+=== STACK DUMP, tag: 0===
+	#000001984 in CRYPTO_ctr128_encrypt (in=274890586368, out=274890586336, len=16, key=274891001856, ivec=274890586272, ecount_buf=274890586240, num=0) at ./openssl/crypto/modes/ctr128.c:82
+	#100001947 in AES_ctr128_encrypt (in=274890586368, out=274890586336, length=16, key=274891001856, ivec=274890586272, ecount_buf=274890586240, num=0) at ./openssl/crypto/aes/aes_ctr.c:60
+	#200000054 in main () at testing_AES_CTR.c:31
+=== STACK DUMP END ===
+Info: 
+	address: 0
+	next: object at 274890586240 of size 16
+		MO20[16] allocated at main():  %ecount_buf = alloca [16 x i8], align 16

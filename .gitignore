@@ -12,7 +12,8 @@ tex files/thesis_draft2.toc
 tex files/.DS_Store
 tex files/texput.log
 Screenshot 2022-08-31 at 14.41.42.png
-klee-out-*
 klee-last
 spectre_attack.c
 test2.c
+thud/
+

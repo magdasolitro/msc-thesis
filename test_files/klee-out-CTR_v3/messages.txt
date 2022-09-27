@@ -1,0 +1,16 @@
+KLEE: Using STP solver backend
+KLEE: ERROR: ./openssl/crypto/modes/ctr128.c:82: memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+KLEE: 
+============ Spectre ================
+KLEE: Spectre detection summary:
+KLEE: Total Spectre found: 2
+KLEE: 1BR: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 16, ASMLine: 2258, UserControlled: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 17, ASMLine: 2251, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 17, ASMLine: 2253, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+
+KLEE: 1BR: /home/klee/kleespectre/klee/runtime/FreeStanding/memset.c: 14, ASMLine: 2288, UserControlled: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memset.c: 15, ASMLine: 2284, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+

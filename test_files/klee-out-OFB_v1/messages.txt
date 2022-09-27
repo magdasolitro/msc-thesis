@@ -1,0 +1,22 @@
+KLEE: Using STP solver backend
+KLEE: ERROR: ./openssl/crypto/modes/ofb128.c:83: memory error: out of bound pointer
+KLEE: NOTE: now ignoring this error at this location
+KLEE: 
+============ Spectre ================
+KLEE: Spectre detection summary:
+KLEE: Total Spectre found: 2
+KLEE: 1BR: ./openssl/crypto/aes/aes_core.c: 653, ASMLine: 260, UserControlled: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 672, ASMLine: 390, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 367, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 381, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 374, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 672, ASMLine: 396, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 671, ASMLine: 361, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: ./openssl/crypto/aes/aes_core.c: 672, ASMLine: 403, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+
+KLEE: 1BR: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 16, ASMLine: 1697, UserControlled: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 17, ASMLine: 1692, isConst: 1, isMarkedSecret: 0
+KLEE: 2RS: /home/klee/kleespectre/klee/runtime/FreeStanding/memcpy.c: 17, ASMLine: 1690, isConst: 1, isMarkedSecret: 0
+KLEE: ===================================
+

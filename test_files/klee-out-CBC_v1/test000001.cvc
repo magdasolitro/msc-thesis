@@ -1,0 +1,8 @@
+ivec0  : ARRAY BITVECTOR(32) OF BITVECTOR(8);
+const_arr11  : ARRAY BITVECTOR(32) OF BITVECTOR(8);
+const_arr22  : ARRAY BITVECTOR(32) OF BITVECTOR(8);
+const_arr33  : ARRAY BITVECTOR(32) OF BITVECTOR(8);
+const_arr44  : ARRAY BITVECTOR(32) OF BITVECTOR(8);
+%----------------------------------------------------
+%----------------------------------------------------
+QUERY( FALSE  );

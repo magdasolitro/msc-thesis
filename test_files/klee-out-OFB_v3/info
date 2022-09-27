@@ -1,0 +1,25 @@
+klee -link-llvm-lib=llvm_libraries/aes_cbc.bc -link-llvm-lib=llvm_libraries/aes_core.bc -link-llvm-lib=llvm_libraries/aes_ctr.bc -link-llvm-lib=llvm_libraries/aes_ecb.bc -link-llvm-lib=llvm_libraries/aes_misc.bc -link-llvm-lib=llvm_libraries/aes_ofb.bc -link-llvm-lib=llvm_libraries/cbc128.bc -link-llvm-lib=llvm_libraries/ctr128.bc -link-llvm-lib=llvm_libraries/ofb128.bc -check-div-zero=false -check-overshift=false --search=randomsp --output-istats=true --enable-speculative --enable-cachemodel --max-sew=50 --run-in-dir=/tmp/sandbox --simplify-sym-indices --write-cvcs --write-cov --output-module --max-memory=8000 --disable-inlining --optimize --use-forked-solver --use-cex-cache --only-output-states-covering-new --max-instruction-time=30 --max-time=43200 --watchdog --max-memory-inhibit=false --max-static-fork-pct=1 --max-static-solve-pct=1 --max-static-cpfork-pct=1 --switch-type=internal ./testing_AES_OFB.bc
+PID: 58217
+Using monotonic steady clock with 1/1000000000s resolution
+Started: 2022-09-22 07:55:50
+BEGIN searcher description
+RandomPathSPSearcher
+END searcher description
+Finished: 2022-09-22 07:55:51
+Elapsed: 00:00:01( 1000000)
+KLEE: done: explored paths = 1
+KLEE: done: total queries = 0
+KLEE: done: valid queries = 0
+KLEE: done: invalid queries = 0
+KLEE: done: query cex = 0
+
+KLEE: done: total instructions = 21162
+KLEE: done: completed paths = 1
+KLEE: done: sp states = 610
+KLEE: done: Completed sp states = 610
+KLEE: done: Average instructions on speculative path = 49.8082
+KLEE: done: generated tests = 1
+KLEE: done: loads: 5212
+KLEE: done: stores: 2746
+KLEE: done: constant loads: 5212
+KLEE: done: constant stores: 2746

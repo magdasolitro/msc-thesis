@@ -1,0 +1,14 @@
+Error: memory error: out of bound pointer
+File: ./openssl/crypto/modes/ofb128.c
+Line: 83
+assembly.ll line: 1497
+Stack: 
+=== STACK DUMP, tag: 0===
+	#000001497 in CRYPTO_ofb128_encrypt (in=274890586448, out=274890586480, len=16, key=274890999296, ivec=274890586544, num=0) at ./openssl/crypto/modes/ofb128.c:83
+	#100001463 in AES_ofb128_encrypt (in=274890586448, out=274890586480, length=16, key=274890999296, ivec=274890586544, num=0) at ./openssl/crypto/aes/aes_ofb.c:59
+	#200000049 in main () at testing_AES_OFB.c:28
+=== STACK DUMP END ===
+Info: 
+	address: 0
+	next: object at 274890585104 of size 16
+		MO7[16] allocated at global:main.in
