@@ -53,13 +53,13 @@ if __name__ == "__main__":
 
     # PEARSON'S CORRELATION
     pearson_cbc_ctr = scipy.stats.pearsonr(conf_cbc, conf_ctr)[0]
-    print("Pearson's correlation (AES-CBC vs. AES-CTR): " + str(pearson_cbc_ctr))
+    print(pearson_cbc_ctr)
 
     pearson_cbc_ofb = scipy.stats.pearsonr(conf_cbc, conf_ofb)[0]
-    print("Pearson's correlation (AES-CBC vs. AES-OFB): " + str(pearson_cbc_ofb))
+    print(pearson_cbc_ofb)
 
     pearson_ctr_ofb = scipy.stats.pearsonr(conf_ctr, conf_ofb)[0]
-    print("Pearson's correlation (AES-CTR vs. AES-OFB): " + str(pearson_ctr_ofb))
+    print(pearson_ctr_ofb)
 
     # COMPARE AES-CBC AND AES-CTR CONFIDENCE VALUES
     plt.plot(conf_cbc, linewidth=0.5, label='AES-CBC')
