@@ -18,23 +18,25 @@
 \BOOKMARK [1][-]{section.4.1}{Alternative strategies to detect microarchitectural attacks}{chapter.4}% 18
 \BOOKMARK [1][-]{section.4.2}{FastSpec}{chapter.4}% 19
 \BOOKMARK [1][-]{section.4.3}{KLEESpectre}{chapter.4}% 20
-\BOOKMARK [1][-]{section.4.4}{Testing the Advanced Encryption Standard \(AES\)}{chapter.4}% 21
+\BOOKMARK [1][-]{section.4.4}{Testing AES modes of operation}{chapter.4}% 21
 \BOOKMARK [2][-]{subsection.4.4.1}{Testing with KLEESpectre}{section.4.4}% 22
 \BOOKMARK [2][-]{subsection.4.4.2}{Testing with FastSpec}{section.4.4}% 23
 \BOOKMARK [2][-]{subsection.4.4.3}{Considerations about the results}{section.4.4}% 24
 \BOOKMARK [0][-]{chapter.5}{Conclusions}{}% 25
-\BOOKMARK [0][-]{appendix.A}{Mathematical notions}{}% 26
-\BOOKMARK [1][-]{section.A.1}{Pearson's coefficient}{appendix.A}% 27
-\BOOKMARK [0][-]{appendix.B}{Deep Learning}{}% 28
-\BOOKMARK [1][-]{section.B.1}{Generative Adversarial Networks \(GANs\)}{appendix.B}% 29
-\BOOKMARK [1][-]{section.B.2}{Bidirectional Encoder Representations from Transformers \(BERT\)}{appendix.B}% 30
-\BOOKMARK [2][-]{subsection.B.2.1}{Transformers}{section.B.2}% 31
-\BOOKMARK [2][-]{subsection.B.2.2}{Architecture}{section.B.2}% 32
-\BOOKMARK [2][-]{subsection.B.2.3}{Training}{section.B.2}% 33
-\BOOKMARK [0][-]{appendix.C}{Block ciphers and AES}{}% 34
-\BOOKMARK [1][-]{section.C.1}{Block ciphers}{appendix.C}% 35
-\BOOKMARK [1][-]{section.C.2}{Modes of operation}{appendix.C}% 36
-\BOOKMARK [2][-]{subsection.C.2.1}{Cipher Block Chaining \(CBC\) mode}{section.C.2}% 37
-\BOOKMARK [2][-]{subsection.C.2.2}{Output Feedback \(OFB\) mode}{section.C.2}% 38
-\BOOKMARK [2][-]{subsection.C.2.3}{Counter \(CTR\) mode}{section.C.2}% 39
-\BOOKMARK [1][-]{section.C.3}{AES: Advanced Encryption Standard}{appendix.C}% 40
+\BOOKMARK [1][-]{section.5.1}{Possible improvements}{chapter.5}% 26
+\BOOKMARK [1][-]{section.5.2}{Possible improvements}{chapter.5}% 27
+\BOOKMARK [0][-]{appendix.A}{Mathematical notions}{}% 28
+\BOOKMARK [1][-]{section.A.1}{Pearson's coefficient}{appendix.A}% 29
+\BOOKMARK [0][-]{appendix.B}{Deep Learning}{}% 30
+\BOOKMARK [1][-]{section.B.1}{Generative Adversarial Networks \(GANs\)}{appendix.B}% 31
+\BOOKMARK [1][-]{section.B.2}{Bidirectional Encoder Representations from Transformers \(BERT\)}{appendix.B}% 32
+\BOOKMARK [2][-]{subsection.B.2.1}{Transformers}{section.B.2}% 33
+\BOOKMARK [2][-]{subsection.B.2.2}{Architecture}{section.B.2}% 34
+\BOOKMARK [2][-]{subsection.B.2.3}{Training}{section.B.2}% 35
+\BOOKMARK [0][-]{appendix.C}{Block ciphers and AES}{}% 36
+\BOOKMARK [1][-]{section.C.1}{Block ciphers}{appendix.C}% 37
+\BOOKMARK [1][-]{section.C.2}{Modes of operation}{appendix.C}% 38
+\BOOKMARK [2][-]{subsection.C.2.1}{Cipher Block Chaining \(CBC\) mode}{section.C.2}% 39
+\BOOKMARK [2][-]{subsection.C.2.2}{Output Feedback \(OFB\) mode}{section.C.2}% 40
+\BOOKMARK [2][-]{subsection.C.2.3}{Counter \(CTR\) mode}{section.C.2}% 41
+\BOOKMARK [1][-]{section.C.3}{AES: Advanced Encryption Standard}{appendix.C}% 42
