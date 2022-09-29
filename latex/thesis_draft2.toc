@@ -37,47 +37,41 @@
 \contentsline {paragraph}{Cache modelling}{29}{section*.23}
 \contentsline {paragraph}{Implementation}{29}{section*.24}
 \contentsline {section}{\numberline {4.4}Testing AES modes of operation}{30}{section.4.4}
+\contentsline {paragraph}{Ground truth}{30}{section*.25}
 \contentsline {subsection}{\numberline {4.4.1}Testing with \textsc {KLEESpectre}}{31}{subsection.4.4.1}
-\contentsline {paragraph}{Testing OpenSSL v1}{32}{section*.25}
-\contentsline {paragraph}{}{32}{section*.26}
-\contentsline {paragraph}{}{33}{section*.28}
-\contentsline {paragraph}{}{36}{section*.29}
-\contentsline {paragraph}{}{37}{section*.30}
+\contentsline {paragraph}{Testing OpenSSL v1}{32}{section*.26}
+\contentsline {paragraph}{}{33}{section*.27}
+\contentsline {paragraph}{}{34}{section*.29}
+\contentsline {paragraph}{}{36}{section*.30}
 \contentsline {paragraph}{}{37}{section*.31}
-\contentsline {paragraph}{Testing OpenSSL v3}{38}{section*.34}
-\contentsline {paragraph}{}{42}{section*.36}
-\contentsline {paragraph}{}{42}{section*.37}
-\contentsline {paragraph}{}{42}{section*.38}
-\contentsline {paragraph}{}{42}{section*.39}
-\contentsline {subsection}{\numberline {4.4.2}Testing with FastSpec}{43}{subsection.4.4.2}
-\contentsline {subsection}{\numberline {4.4.3}Considerations about the results}{49}{subsection.4.4.3}
-\contentsline {paragraph}{}{50}{section*.49}
-\contentsline {chapter}{\numberline {5}Conclusions}{51}{chapter.5}
-\contentsline {paragraph}{}{51}{section*.50}
-\contentsline {paragraph}{}{51}{section*.51}
-\contentsline {paragraph}{}{51}{section*.52}
-\contentsline {section}{\numberline {5.1}Possible improvements}{52}{section.5.1}
-\contentsline {section}{\numberline {5.2}Possible improvements}{52}{section.5.2}
-\contentsline {chapter}{\numberline {A}Mathematical notions}{53}{appendix.A}
-\contentsline {section}{\numberline {A.1}Pearson's coefficient}{53}{section.A.1}
-\contentsline {chapter}{\numberline {B}Deep Learning}{55}{appendix.B}
-\contentsline {section}{\numberline {B.1}Generative Adversarial Networks (GANs)}{55}{section.B.1}
-\contentsline {paragraph}{Generator}{55}{section*.54}
-\contentsline {paragraph}{Discriminator}{56}{section*.55}
-\contentsline {paragraph}{Adversarial learning}{56}{section*.56}
-\contentsline {section}{\numberline {B.2}Bidirectional Encoder Representations from Transformers (BERT)}{56}{section.B.2}
-\contentsline {subsection}{\numberline {B.2.1}Transformers}{57}{subsection.B.2.1}
-\contentsline {paragraph}{Input processing}{57}{section*.58}
-\contentsline {paragraph}{Encoder}{58}{section*.59}
-\contentsline {paragraph}{Decoder}{58}{section*.60}
-\contentsline {subsection}{\numberline {B.2.2}Architecture}{59}{subsection.B.2.2}
-\contentsline {subsection}{\numberline {B.2.3}Training}{59}{subsection.B.2.3}
-\contentsline {paragraph}{Pre-training}{59}{section*.61}
-\contentsline {paragraph}{Fine-tuning}{59}{section*.62}
-\contentsline {chapter}{\numberline {C}Block ciphers and AES}{61}{appendix.C}
-\contentsline {section}{\numberline {C.1}Block ciphers}{61}{section.C.1}
-\contentsline {section}{\numberline {C.2}Modes of operation}{62}{section.C.2}
-\contentsline {subsection}{\numberline {C.2.1}Cipher Block Chaining (CBC) mode}{62}{subsection.C.2.1}
-\contentsline {subsection}{\numberline {C.2.2}Output Feedback (OFB) mode}{63}{subsection.C.2.2}
-\contentsline {subsection}{\numberline {C.2.3}Counter (CTR) mode}{63}{subsection.C.2.3}
-\contentsline {section}{\numberline {C.3}AES: Advanced Encryption Standard}{64}{section.C.3}
+\contentsline {paragraph}{}{38}{section*.32}
+\contentsline {subsection}{\numberline {4.4.2}Testing with FastSpec}{39}{subsection.4.4.2}
+\contentsline {subsection}{\numberline {4.4.3}Considerations about the results}{46}{subsection.4.4.3}
+\contentsline {paragraph}{}{47}{section*.42}
+\contentsline {chapter}{\numberline {5}Conclusions}{49}{chapter.5}
+\contentsline {paragraph}{}{49}{section*.43}
+\contentsline {paragraph}{}{49}{section*.44}
+\contentsline {section}{\numberline {5.1}Possible improvements}{50}{section.5.1}
+\contentsline {chapter}{\numberline {A}Mathematical notions}{51}{appendix.A}
+\contentsline {section}{\numberline {A.1}Pearson's coefficient}{51}{section.A.1}
+\contentsline {chapter}{\numberline {B}Deep Learning}{53}{appendix.B}
+\contentsline {section}{\numberline {B.1}Generative Adversarial Networks (GANs)}{53}{section.B.1}
+\contentsline {paragraph}{Generator}{53}{section*.46}
+\contentsline {paragraph}{Discriminator}{54}{section*.47}
+\contentsline {paragraph}{Adversarial learning}{54}{section*.48}
+\contentsline {section}{\numberline {B.2}Bidirectional Encoder Representations from Transformers (BERT)}{54}{section.B.2}
+\contentsline {subsection}{\numberline {B.2.1}Transformers}{55}{subsection.B.2.1}
+\contentsline {paragraph}{Input processing}{55}{section*.50}
+\contentsline {paragraph}{Encoder}{56}{section*.51}
+\contentsline {paragraph}{Decoder}{56}{section*.52}
+\contentsline {subsection}{\numberline {B.2.2}Architecture}{57}{subsection.B.2.2}
+\contentsline {subsection}{\numberline {B.2.3}Training}{57}{subsection.B.2.3}
+\contentsline {paragraph}{Pre-training}{57}{section*.53}
+\contentsline {paragraph}{Fine-tuning}{57}{section*.54}
+\contentsline {chapter}{\numberline {C}Block ciphers and AES}{59}{appendix.C}
+\contentsline {section}{\numberline {C.1}Block ciphers}{59}{section.C.1}
+\contentsline {section}{\numberline {C.2}Modes of operation}{60}{section.C.2}
+\contentsline {subsection}{\numberline {C.2.1}Cipher Block Chaining (CBC) mode}{60}{subsection.C.2.1}
+\contentsline {subsection}{\numberline {C.2.2}Output Feedback (OFB) mode}{61}{subsection.C.2.2}
+\contentsline {subsection}{\numberline {C.2.3}Counter (CTR) mode}{61}{subsection.C.2.3}
+\contentsline {section}{\numberline {C.3}AES: Advanced Encryption Standard}{62}{section.C.3}
