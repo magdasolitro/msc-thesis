@@ -1,0 +1,6 @@
+\select@language {italian}
+\select@language {italian}
+\contentsline {chapter}{\numberline {1}Titolo del primo capitolo}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Titolo della Sezione}{1}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Sottosezione}{1}{subsection.1.1.1}
+\contentsline {chapter}{\numberline {A}Titolo della prima appendice}{5}{appendix.Alph1}
