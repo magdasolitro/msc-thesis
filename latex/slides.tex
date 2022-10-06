@@ -8,49 +8,143 @@
 %% L'uso dell'opzione "ignorenonframetext" può creare problemi ed è quindi sconsigliato.
 %% Se incontrate problemi con altre opzioni di "beamer" fatecelo sapere.
 \documentclass[beamer={noamsthm,10pt},target=mst]{thud}[2014/03/11]
+\usepackage{tikz}
+\usepackage{listings}
+
+\lstset{
+	language=C,
+	aboveskip=3mm,
+	belowskip=3mm,
+	xleftmargin=5mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	keywordstyle=\color{blue},
+	morekeywords={bool},
+	commentstyle=\color{green},
+	stringstyle=\color{violet},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=4
+}
+
+\definecolor{red}{RGB}{255,100,100}
+\definecolor{green}{RGB}{60,179,113}
 
 %% --- Informazioni sulla tesi ---
-%% Per tutti i tipi di tesi
-\title{Retrospettiva antero-posteriore dei linguaggi funzionali imperativi}
-\author{Nello Sconforto}
-\course{Informatica}
-\supervisor{Prof.\ Sara Cinesca}
-\cosupervisor{Dott.\ Remo Mori\and Dott.\ Dario Lampa}
-%% Altri campi disponibili: \tutor, \date (anno accademico, calcolato in automatico).
-%% Con \supervisor, \cosupervisor e \tutor si possono indicare più nomi separati da \and.
-%% Per le sole tesi di dottorato
-\cycle{XXVIII}
-%% Campi obbligatori: \title, \author e \course.
-
-%% Nel resto del preambolo potete personalizzare la presentazione liberamente.
-%% Se incontrate problemi causati dall'interazione tra "thud" e "beamer" fatecelo sapere.
+\title{Detecting Spectre vulnerabilities in OpenSSL libraries using static analysis techniques}
+\author{Magdalena M. Solitro}
+\course{Artificial Intelligence \& Cybersecurity}
+\supervisor{Prof.\ Elisabeth Oswald}
+\cosupervisor{Prof.\ Agostino Dovier}
 
 \begin{document}
-
-%% Il frontespizio prima di tutto!
-%% \maketitle accetta gli stessi argomenti opzionali di \begin{frame} (p.es. "[plain]")
-\maketitle
-
-%% Sezione
-\section{Sezione}
-
-%% Diapositiva
-\begin{frame}{Diapositiva}
-\begin{itemize}
-\item Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-\item Morbi varius neque eu erat dictum pulvinar.
-\item Cras pellentesque lacus sit amet magna dictum, ut tempus eros consequat.
-\end{itemize}
-\end{frame}
-
-%% Sottosezione
-\subsection{Sottosezione}
-\begin{frame}{Altra diapositiva}
-\begin{enumerate}
-\item Nunc ornare elit et pretium commodo.
-\item Aenean a urna eu diam interdum sagittis faucibus non quam.
-\item Mauris eget massa eget ipsum condimentum varius non et eros.
-\end{enumerate}
-\end{frame}
-
-\end{document}
+	
+	%% Il frontespizio prima di tutto!
+	%% \maketitle accetta gli stessi argomenti opzionali di \begin{frame} (p.es. "[plain]")
+		\maketitle
+		
+		%% Diapositiva
+		\begin{frame}{Abstract}
+			Goals of the thesis:
+			\begin{itemize}
+				\item In-depth study of Spectre attacks;
+				\item Examination OpenSSL's implementation of AES in search for Spectre vulnerabilities;
+				\item Comparison the results of different static analysers.
+			\end{itemize}
+		\end{frame}
+		
+		% ========================================
+		
+		\begin{frame}{Static analysis}
+			\textbf{Static analysis:} automated analysis of a program's source code to verify whether it satisfies certain properties.
+			\begin{itemize}
+				\item No need to execute the program! ($\neq$ \textbf{dynamic} analysis).
+				\item More accurate than simple testing...
+				\item ... but not perfect $\Longrightarrow$ Halting problem, Rice's theorem.
+			\end{itemize} 
+			\vspace{1cm}
+			\begin{tikzpicture}
+				\draw[rounded corners] (0, 0) rectangle (3, 2) {};
+				% sound, but incomplete
+				\draw[rounded corners] (0, 0) rectangle (3, 2) {};
+				% unsound, but complete
+			\end{tikzpicture}
+		\end{frame}
+		
+		% ========================================
+		
+		\begin{frame}[fragile]{Spectre}
+			\textbf{Spectre:} a class of side-channel attacks that exploits speculative to read protected memory addresses.
+			\vspace{0.5cm}
+			
+			\textbf{Speculative execution:} optimization technique where the CPU tries to predict what branch of a conditional statement is going to be executed and loads the relative data in advance.
+			\vspace{0.5cm}
+			
+			\textbf{Example:} Spectre v1
+			\begin{lstlisting}
+				void passwordCheck(int x) {
+					if (x == secret_size) {
+						return secret;      // loads secret value in cache 
+					} else {
+						printf("Error!");
+					}
+				}
+			\end{lstlisting}
+		\end{frame}
+		
+		% ========================================
+		
+		\begin{frame}{Verification tools to detect Spectre}
+			Selected tools:
+			
+			\begin{itemize}
+				\item \textbf{KLEESPECTRE}: leverages on speculative symbolic execution and taint analysis.
+				\item \textbf{FastSpec}: employs deep learning techniques such as Generative Adversarial Networks and BERT.
+			\end{itemize}
+		\end{frame}
+		
+		% ========================================
+		
+		\begin{frame}[fragile]{KLEESPECTRE: Results}
+			Detected 1 potential Spectre vulnerability against 5 false positives:
+			
+			\begin{lstlisting}
+				if (bits == 128) {      // speculation on the value of bits
+					while (1) {
+						temp  = rk[3];
+						rk[4] = rk[0]
+						...
+						rk[7] = rk[3] ^ rk[6];
+						if (++i == 10) {
+							return 0;
+						}
+						rk += 4;
+					}
+				}
+				rk[4] = GETU32(userKey + 16);   // speculative loading
+				rk[5] = GETU32(userKey + 20);   // speculative loading
+			\end{lstlisting}
+			
+		\end{frame}
+		
+		% ========================================
+		
+		\begin{frame}[fragile]{FastSpec: Results}
+			All the alleged Spectre vulnerabilities turn out to be false positives:
+			\begin{lstlisting}
+				mov <imm> (%rbp), %edx
+				mov %dl, (%rax)
+				nop
+				pop %rbp
+				retq <UNK>
+				push %rbp
+				mov %rsp, %rbp
+				mov %rdi, <imm>(%rbp)
+				mov %rsi, <imm>(%rbp)
+				mov %rdx , <imm>(%rbp)
+				mov <imm>(%rbp), %rax
+			\end{lstlisting}
+		\end{frame}
+		
+	\end{document}
